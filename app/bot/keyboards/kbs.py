@@ -1,4 +1,7 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from app.db.models.tasks import ProjectStatus
 
 
 def draft_actions_kb() -> InlineKeyboardMarkup:
@@ -8,9 +11,45 @@ def draft_actions_kb() -> InlineKeyboardMarkup:
     ])
 
 
-def review_actions_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Одобрить", callback_data="approve_post")],
-        [InlineKeyboardButton(text="🔁 Перегенерировать", callback_data="regen_post")],
-        [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_review")],
-    ])
+def review_actions_kb(task_id: int) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.button(text="✅ Одобрить", callback_data=f"post:approve:{task_id}")
+    kb.button(text="🔁 Перегенерировать", callback_data=f"post:regen:{task_id}")
+    kb.button(text="❌ Отмена", callback_data=f"post:cancel:{task_id}")
+    kb.adjust(1)
+    return kb.as_markup()
+
+
+def persistent_projects_keyboard() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📁 Проекты")],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=False,
+    )
+
+# === Навигация по проектам ===
+def projects_nav_kb(task_id: int, index: int, total: int) -> InlineKeyboardMarkup:
+    b = InlineKeyboardBuilder()
+    # prev / next
+    b.button(text="◀️ Предыдущий", callback_data=f"proj_nav:prev:{index}")
+    b.button(text="Следующий ▶️", callback_data=f"proj_nav:next:{index}")
+    b.button(text="✏️ Изменить статус", callback_data=f"proj_nav:status:{task_id}:{index}")
+    b.adjust(2, 1)
+    # пометка номера
+    info = InlineKeyboardButton(text=f"{index+1}/{total}", callback_data="proj_nav:nop")
+    b.row(info)
+    return b.as_markup()
+
+# === Клавиатура выбора статуса ===
+def status_choice_kb(task_id: int, index: int) -> InlineKeyboardMarkup:
+    """
+    В callback кладём безопасный ключ enum (имя атрибута), а пользователю — русскую метку (value).
+    """
+    b = InlineKeyboardBuilder()
+    for name, member in ProjectStatus.__members__.items():
+        b.button(text=member.value, callback_data=f"proj_set_status:{task_id}:{index}:{name}")
+    b.button(text="⬅️ Назад", callback_data=f"proj_nav:back:{index}")
+    b.adjust(1)
+    return b.as_markup()

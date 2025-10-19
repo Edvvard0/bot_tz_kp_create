@@ -4,6 +4,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
+from app.bot.handlers.projects_router import router as projects_router
 from app.bot.handlers.router import router
 from app.bot.middleware.auth import build_auth_middleware
 from app.config import settings
@@ -21,6 +22,7 @@ async def main():
     dp.message.middleware(auth)
     dp.callback_query.middleware(auth)
 
+    dp.include_router(projects_router)
     dp.include_router(router)
 
     print("Bot started")

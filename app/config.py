@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     CHAT_GPT_API_KEY: str
     CHAT_GPT_MODEL: str
 
+    BUSINESS_PARTNER_ID: int
+    TEAM_PARTNER_ID: int
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )

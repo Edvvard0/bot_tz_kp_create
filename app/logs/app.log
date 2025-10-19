@@ -63,3 +63,325 @@
 2025-10-19 22:23:11.066 | INFO     | app.bot.handlers.router:approve_post:219 - Post approved by 5254325840 title='Разработка программы на Python для обработки STL-файлов'
 2025-10-19 22:23:14.027 | DEBUG    | app.bot.handlers.router:on_any_content:144 - Draft updated by 5254325840: texts=1, files=0
 2025-10-19 22:23:17.337 | DEBUG    | app.bot.handlers.router:clear_draft:164 - Draft cleared by 5254325840
+2025-10-19 22:39:23.762 | INFO     | app.bot.handlers.router:cmd_start:89 - Command /start by user_id=5254325840 username='Edward0076'
+2025-10-19 22:39:23.892 | DEBUG    | app.bot.handlers.router:cmd_start:108 - User already exists tg_id=5254325840
+2025-10-19 22:39:26.566 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:40:24.855 | INFO     | app.bot.handlers.router:cmd_start:89 - Command /start by user_id=5254325840 username='Edward0076'
+2025-10-19 22:40:24.978 | DEBUG    | app.bot.handlers.router:cmd_start:108 - User already exists tg_id=5254325840
+2025-10-19 22:40:27.359 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:44:48.213 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:45:08.467 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:49:58.260 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:52:33.871 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:53:53.545 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:57:11.444 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:58:54.432 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:59:01.388 | INFO     | app.bot.handlers.router:cmd_start:89 - Command /start by user_id=5254325840 username='Edward0076'
+2025-10-19 22:59:01.532 | DEBUG    | app.bot.handlers.router:cmd_start:108 - User already exists tg_id=5254325840
+2025-10-19 22:59:02.971 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 22:59:43.272 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:00:27.775 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:01:43.411 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:03:51.173 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:08:39.115 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:09:06.401 | INFO     | app.bot.handlers.projects_router:proj_set_status:130 - Task 4 status changed to 'составляется тз/кп'
+2025-10-19 23:13:55.069 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:17:20.561 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:24:23.767 | INFO     | app.bot.handlers.router:cmd_start:89 - Command /start by user_id=5254325840 username='Edward0076'
+2025-10-19 23:24:23.786 | DEBUG    | app.bot.handlers.router:cmd_start:108 - User already exists tg_id=5254325840
+2025-10-19 23:25:16.952 | DEBUG    | app.bot.handlers.router:on_any_content:144 - Draft updated by 5254325840: texts=1, files=0
+2025-10-19 23:25:22.470 | INFO     | app.bot.handlers.router:send_project:172 - Generation requested by 5254325840 brief_len=3771
+2025-10-19 23:25:22.570 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-19 23:25:23.778 | ERROR    | app.bot.handlers.router:send_project:180 - GPT generation failed: Error code: 403 - {'error': {'code': 'unsupported_country_region_territory', 'message': 'Country, region, or territory not supported', 'param': None, 'type': 'request_forbidden'}}
+Traceback (most recent call last):
+  File "F:\my_projects\my_bot_tz_kp\app\main.py", line 33, in <module>
+    asyncio.run(main())
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 321, in run_forever
+    super().run_forever()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 608, in run_forever
+    self._run_once()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1936, in _run_once
+    handle._run()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 309, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 158, in feed_update
+    response = await self.update.wrap_outer_middleware(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 25, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 56, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\fsm\middleware.py", line 42, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 276, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 174, in _propagate_event
+    response = await router.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 166, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "F:\my_projects\my_bot_tz_kp\app\bot\middleware\auth.py", line 33, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+> File "F:\my_projects\my_bot_tz_kp\app\bot\handlers\router.py", line 176, in send_project
+    gpt_resp = await generate_tg_post(brief)  # {"title":..., "tg_post":...}
+  File "F:\my_projects\my_bot_tz_kp\app\chat_gpt\service.py", line 79, in generate_tg_post
+    resp = await _client.responses.create(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\openai\resources\responses\responses.py", line 2259, in create
+    return await self._post(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\openai\_base_client.py", line 1794, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\openai\_base_client.py", line 1594, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.PermissionDeniedError: Error code: 403 - {'error': {'code': 'unsupported_country_region_territory', 'message': 'Country, region, or territory not supported', 'param': None, 'type': 'request_forbidden'}}
+2025-10-19 23:25:49.206 | DEBUG    | app.bot.handlers.router:on_any_content:137 - No collecting state for user 5254325840, auto-start new draft
+2025-10-19 23:25:49.207 | DEBUG    | app.bot.handlers.router:on_any_content:144 - Draft updated by 5254325840: texts=1, files=0
+2025-10-19 23:25:50.956 | INFO     | app.bot.handlers.router:send_project:172 - Generation requested by 5254325840 brief_len=3771
+2025-10-19 23:25:51.110 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-19 23:26:14.299 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот для стоматологических клиник (SaaS MVP)",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник (SaaS MVP)\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nМы создаем B2B SaaS-продукт для стоматологических клиник в России. Это AI-ассистент, который автоматизирует работу с пациентами и решает критическую проблему ниши.\nAI-ассистент обрабатывает ВСЕ входящие заявки 24/7 без потерь, квалифицирует клиентов и записывает на прием, напоминает о визитах, автоматически заполняет освободившиеся слоты и снимает 80-90% рутины с администраторов. Архитектура должна быть масштабируемой: поддержка 3000-5000+ клиник, легкое добавление каналов, интеграции с Битрикс24, AmoCRM и будущими системами. Важна безопасность и соответствие 152-ФЗ: данные россиян хранятся на российских серверах.\n\n📎 Полное тз по ссылке\ndобавим после согласования\n💸 Оплата и сроки: ставит исполнитель\n👨‍💻 Кто нужен в проект:\nразработчик с опытом создания SaaS, full-stack, интеграции CRM (Битрикс24, AmoCRM), мультиканальные каналы (WhatsApp, VK, Telegram, Instagram, виджет на сайте), безопасность данных 152-ФЗ, российские сервера.\n\n📩 Отклики:\nПишите сюда👉 @Edward0076\nВ отклике указывайте: Стек и портфолио"
+}
+2025-10-19 23:26:14.300 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот для стоматологических клиник (SaaS MVP)' post_len=1109
+2025-10-19 23:26:14.547 | INFO     | app.bot.handlers.router:send_project:187 - Project saved title='AI-чат-бот для стоматологических клиник (SaaS MVP)' status='новый'
+2025-10-19 23:26:21.644 | INFO     | app.bot.handlers.router:approve_post:219 - Post approved by 5254325840 title='AI-чат-бот для стоматологических клиник (SaaS MVP)'
+2025-10-19 23:26:47.516 | INFO     | app.bot.handlers.router:cmd_start:89 - Command /start by user_id=5254325840 username='Edward0076'
+2025-10-19 23:26:47.524 | DEBUG    | app.bot.handlers.router:cmd_start:108 - User already exists tg_id=5254325840
+2025-10-19 23:26:50.878 | INFO     | app.bot.handlers.projects_router:show_projects_entry:76 - Projects list requested by user 5254325840
+2025-10-19 23:26:56.132 | INFO     | app.bot.handlers.projects_router:proj_set_status:130 - Task 7 status changed to 'составляется тз/кп'
+2025-10-20 00:14:54.157 | INFO     | app.bot.handlers.router:cmd_start:87 - Command /start by user_id=5254325840 username='Edward0076'
+2025-10-20 00:14:54.307 | DEBUG    | app.bot.handlers.router:cmd_start:106 - User already exists tg_id=5254325840
+2025-10-20 00:14:57.086 | INFO     | app.bot.handlers.projects_router:show_projects_entry:100 - Projects list requested by user 5254325840
+2025-10-20 00:15:16.426 | INFO     | app.bot.handlers.router:cmd_start:87 - Command /start by user_id=7022782558 username='sasha_sokolovv'
+2025-10-20 00:15:16.438 | INFO     | app.bot.handlers.router:cmd_start:104 - User registered id/tg_id=7022782558
+2025-10-20 00:15:32.130 | DEBUG    | app.bot.handlers.router:on_any_content:141 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 00:15:35.909 | INFO     | app.bot.handlers.router:send_project:170 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 00:15:36.104 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-20 00:16:02.604 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот для стоматологических клиник (SaaS MVP)",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник — SaaS MVP\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nМы создаём B2B SaaS для российских клиник. Это AI-ассистент, который автоматизирует работу администраторов: общение с пациентами, сбор нужной информации, запись на приём и автоматическое создание клиента в CRM. Цель — 24/7 обработка заявок без потерь и масштабируемость до тысяч клиник.\nНа 1-м этапе — MVP чат-бот с многоканальностью: WhatsApp (первый канал), затем VK, Telegram, Instagram и сайт-виджет. Бот отвечает на вопросы, квалифицирует клиентов, записывает на приём, синхронизирует карточку в CRM. В архитектуре необходима защита данных и соответствие 152-ФЗ (данные россиян на российских серверах).\n\n📎 Полное тз по ссылке\ndобавим после согласования\n\n💸 Оплата и сроки: ставит исполнитель\n\n👨‍💻 Кто нужен в проект:\n- Архитектор/разработчик SaaS, AI-инженер; стек: Python/Node.js, FastAPI/NestJS, PostgreSQL, Docker/Kubernetes; интеграции с Bitrix24, AmoCRM и каналами (WhatsApp API, VK, Telegram, Instagram, виджет); 152-ФЗ; хранение данных в РФ; масштабирование на 3000-5000+ клиник; обеспечение безопасности и логирования.\n- QA, DevOps, PM/UX-дизайнер как помощь по потребности.\n\n📩 Отклики:\nПишите сюда👉 @Edward0076\nВ отклике указывайте: стек и портфолио"
+}
+2025-10-20 00:16:02.604 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот для стоматологических клиник (SaaS MVP)' post_len=1254
+2025-10-20 00:16:57.117 | INFO     | app.bot.handlers.router:cmd_start:87 - Command /start by user_id=7022782558 username='sasha_sokolovv'
+2025-10-20 00:16:57.264 | DEBUG    | app.bot.handlers.router:cmd_start:106 - User already exists tg_id=7022782558
+2025-10-20 00:17:01.749 | DEBUG    | app.bot.handlers.router:on_any_content:141 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 00:17:04.640 | INFO     | app.bot.handlers.router:send_project:170 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 00:17:04.837 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-20 00:17:25.900 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот для стоматологических клиник (MVP SaaS)",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник (MVP SaaS)\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nМы создаем B2B SaaS-продукт для российских стоматологических клиник. Это AI-ассистент, который автоматизирует работу администраторов и решает ключевые задачи ниши: обработку входящих заявок 24/7 без потерь, квалификацию клиентов и запись на прием, напоминания о визитах и автоматическое заполнение карточек в CRM. Этапы проекта — MVP с многоканальностью (WhatsApp первым, затем VK, Telegram, Instagram и виджет на сайте) и интеграции с Bitrix24, AmoCRM и другими CRM.\n\n📎 Полное тз по ссылке\nдобавим после согласования\n\n💸 Оплата и сроки: ставит исполнитель\n\n👨‍💻 Кто нужен в проект:\n- Роли: Backend/API инженер, AI/NLP инженер, Frontend/Fullstack, DevOps, QA, PM.\n- Стек: Python/FastAPI, Node.js, React, PostgreSQL, Redis; ML/NLP через OpenAI API или локальные модели.\n- Требования: опыт разработки SaaS, масштабируемой архитектуры, интеграций с CRM и МИС, соблюдение 152-ФЗ, размещение на российских серверах, безопасность данных.\n\n📩 Отклики:\nПишите сюда👉 [контакт заказчика скрыт]\nВ отклике указывайте:\nСтек и портфолио"
+}
+2025-10-20 00:17:25.901 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот для стоматологических клиник (MVP SaaS)' post_len=1111
+2025-10-20 00:17:25.909 | INFO     | app.bot.handlers.router:send_project:185 - Project saved title='AI-чат-бот для стоматологических клиник (MVP SaaS)' status='новый'
+2025-10-20 00:32:22.391 | DEBUG    | app.bot.handlers.router:on_any_content:134 - No collecting state for user 7022782558, auto-start new draft
+2025-10-20 00:32:22.391 | DEBUG    | app.bot.handlers.router:on_any_content:141 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 00:32:24.628 | INFO     | app.bot.handlers.router:send_project:170 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 00:35:00.615 | DEBUG    | app.bot.handlers.router:on_any_content:134 - No collecting state for user 7022782558, auto-start new draft
+2025-10-20 00:35:00.616 | DEBUG    | app.bot.handlers.router:on_any_content:141 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 00:35:04.515 | INFO     | app.bot.handlers.router:send_project:170 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 00:35:04.645 | INFO     | app.bot.handlers.router:send_project:183 - Draft project saved id=10 by=7022782558 status='новый'
+2025-10-20 00:35:04.962 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-20 00:35:35.051 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот SaaS для стоматологий",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник (SaaS)\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nМы делаем B2B SaaS для клиник в России. Это AI-ассистент, который автоматизирует работу с пациентами и решает критическую задачу ниши.\n\nЭтап MVP: чат-бот обрабатывает текстовые заявки 24/7, квалифицирует пациентов, записывает на прием и создает карточку клиента в CRM. Планируем переход к мультиканальности (WhatsApp → VK, Telegram, Instagram, сайт-виджет) и интеграциям с Bitrix24, AmoCRM и др.\n\n📎 Полное тз по ссылке\ndобавим после согласования\n\n💸 Оплата и сроки: ставит исполнитель\n\n👨‍💻 Кто нужен в проект:\nАрхитектор/разработчик SaaS, знающий интеграции CRM, работающий над масштабированием под 3000-5000+ клиник, с учётом 152-ФЗ. Технологии: Node.js/Python, микросервисы, коннекторы каналов, хранение на российских серверах, безопасность и телеметрия.\n\n📩 Отклики:\nПишите сюда👉 [контакт после согласования]\nВ отклике указывайте:\nСтек и портфолио\n\nПравила:\n- Никаких контактов заказчика.\n- Если данных не хватает — используй заглушки.\n- Ограничение tg_post: 900–1100 символов."
+}
+2025-10-20 00:35:35.051 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот SaaS для стоматологий' post_len=1066
+2025-10-20 00:35:35.052 | INFO     | app.bot.handlers.router:send_project:216 - GPT ok for task 10: title='AI-чат-бот SaaS для стоматологий' post_len=1066
+2025-10-20 00:35:35.586 | ERROR    | app.bot.handlers.router:send_project:244 - Notify BUSINESS failed: Telegram server says - Bad Request: message is too long
+Traceback (most recent call last):
+  File "F:\my_projects\my_bot_tz_kp\app\main.py", line 33, in <module>
+    asyncio.run(main())
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 321, in run_forever
+    super().run_forever()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 608, in run_forever
+    self._run_once()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1936, in _run_once
+    handle._run()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 309, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 158, in feed_update
+    response = await self.update.wrap_outer_middleware(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 25, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 56, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\fsm\middleware.py", line 42, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 276, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 174, in _propagate_event
+    response = await router.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 166, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "F:\my_projects\my_bot_tz_kp\app\bot\middleware\auth.py", line 33, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+> File "F:\my_projects\my_bot_tz_kp\app\bot\handlers\router.py", line 237, in send_project
+    await bot.send_message(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\bot.py", line 2917, in send_message
+    return await self(call, request_timeout=request_timeout)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\bot.py", line 488, in __call__
+    return await self.session(self, method, timeout=request_timeout)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\session\base.py", line 254, in __call__
+    return cast(TelegramType, await middleware(bot, method))
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\session\aiohttp.py", line 189, in make_request
+    response = self.check_response(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\session\base.py", line 120, in check_response
+    raise TelegramBadRequest(method=method, message=description)
+aiogram.exceptions.TelegramBadRequest: Telegram server says - Bad Request: message is too long
+2025-10-20 00:38:24.187 | INFO     | app.bot.handlers.projects_router:show_projects_entry:100 - Projects list requested by user 5254325840
+2025-10-20 00:42:24.075 | DEBUG    | app.bot.handlers.router:on_any_content:191 - No collecting state for user 7022782558, auto-start new draft
+2025-10-20 00:42:24.076 | DEBUG    | app.bot.handlers.router:on_any_content:198 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 00:42:25.991 | INFO     | app.bot.handlers.router:send_project:227 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 00:42:26.153 | INFO     | app.bot.handlers.router:send_project:240 - Draft project saved id=11 by=7022782558 status='новый'
+2025-10-20 00:42:26.435 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-20 00:42:46.803 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот для стоматологических клиник (SaaS MVP)",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник (SaaS MVP)\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nМы создаем B2B SaaS-решение: AI-ассистент, который автоматизирует рутины администраторов и улучшает взаимодействие с пациентами в стоматологических клиниках.\n\nЦель — обрабатывать входящие заявки 24/7, квалифицировать клиентов, записывать на прием, снижать неявки и автоматически заполнять освободившиеся слоты — чтобы продукт можно было масштабировать на тысячи клиник.\n\n📎 Полное тз по ссылке\nдобавим после согласования\n\n💸 Оплата и сроки: ставит исполнитель\n\n👨‍💻 Кто нужен в проект:\n• Продакт-менеджер/PM\n• Backend/AI-разработчик (Node.js/Python, интеграции CRM Bitrix24, AmoCRM)\n• Frontend/виджеты (React) и интеграции каналов: WhatsApp, VK, Telegram, Instagram\n• DevOps и безопасность (152-ФЗ, хранение на РФ-серверах)\n• QA и сопровождение\n\n📩 Отклики:\nПишите сюда👉 @Edward0076\nВ отклике указывайте:\nСтек и портфолио"
+}
+2025-10-20 00:42:46.803 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот для стоматологических клиник (SaaS MVP)' post_len=909
+2025-10-20 00:42:46.803 | INFO     | app.bot.handlers.router:send_project:266 - GPT ok for task 11: title='AI-чат-бот для стоматологических клиник (SaaS MVP)' post_len=909
+2025-10-20 00:42:47.222 | ERROR    | app.bot.handlers.router:send_project:292 - Notify BUSINESS (brief+post) failed: Telegram server says - Bad Request: can't parse entities: Character '-' is reserved and must be escaped with the preceding '\'
+Traceback (most recent call last):
+  File "F:\my_projects\my_bot_tz_kp\app\main.py", line 33, in <module>
+    asyncio.run(main())
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 321, in run_forever
+    super().run_forever()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 608, in run_forever
+    self._run_once()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1936, in _run_once
+    handle._run()
+  File "C:\Users\Edward\AppData\Local\Programs\Python\Python311\Lib\asyncio\events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 309, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 158, in feed_update
+    response = await self.update.wrap_outer_middleware(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 25, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 56, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\fsm\middleware.py", line 42, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 276, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 174, in _propagate_event
+    response = await router.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 166, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "F:\my_projects\my_bot_tz_kp\app\bot\middleware\auth.py", line 33, in __call__
+    return await handler(event, data)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+> File "F:\my_projects\my_bot_tz_kp\app\bot\handlers\router.py", line 280, in send_project
+    await send_md_v2_chunked(
+  File "F:\my_projects\my_bot_tz_kp\app\bot\handlers\router.py", line 87, in send_md_v2_chunked
+    await bot.send_message(chat_id=chat_id, text=hdr, parse_mode=ParseMode.MARKDOWN_V2)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\bot.py", line 2917, in send_message
+    return await self(call, request_timeout=request_timeout)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\bot.py", line 488, in __call__
+    return await self.session(self, method, timeout=request_timeout)
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\session\base.py", line 254, in __call__
+    return cast(TelegramType, await middleware(bot, method))
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\session\aiohttp.py", line 189, in make_request
+    response = self.check_response(
+  File "F:\my_projects\my_bot_tz_kp\.venv\Lib\site-packages\aiogram\client\session\base.py", line 120, in check_response
+    raise TelegramBadRequest(method=method, message=description)
+aiogram.exceptions.TelegramBadRequest: Telegram server says - Bad Request: can't parse entities: Character '-' is reserved and must be escaped with the preceding '\'
+2025-10-20 00:46:51.822 | DEBUG    | app.bot.handlers.router:on_any_content:196 - No collecting state for user 7022782558, auto-start new draft
+2025-10-20 00:46:51.822 | DEBUG    | app.bot.handlers.router:on_any_content:203 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 00:46:55.431 | INFO     | app.bot.handlers.router:send_project:232 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 00:46:55.597 | INFO     | app.bot.handlers.router:send_project:245 - Draft project saved id=12 by=7022782558 status='новый'
+2025-10-20 00:46:56.037 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-20 00:47:23.518 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот для стоматологических клиник (SaaS, MVP)",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник (SaaS, MVP)\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nМы создаем B2B SaaS-продукт для стоматологических клиник в РФ. AI-ассистент автоматизирует рутинные задачи администраторов: обработку заявок 24/7, квалификацию клиентов, запись на прием, создание карточки в CRM, напоминания и заполнение слотов из листа ожидания. ЭТАП 1 — MVP с мультиканальностью (WhatsApp первым, затем VK, Telegram, Instagram, виджет на сайте); ЭТАП 2 — умная запись и напоминания по расписанию клиники и интерактивные кнопки; ЭТАП 3 — авто-заполнение освободившихся слотов через лист ожидания; ЭТАП 4 — голосовой бот в перспективе.\n\n📎 Полное тз по ссылке\nдобавим после согласования\n\n💸 Оплата и сроки: ставит исполнитель\n\n👨‍💻 Кто нужен в проект:\nBackend/AI разработчик, интегратор CRM, DevOps, QA. Стек: Python/Node.js, API-first, ML/NLP, PostgreSQL/Redis, Kubernetes/Docker. Требования: опыт с 152-ФЗ, хранение персональных данных на российских серверах; интеграции с Bitrix24, AmoCRM; масштаб на 3000–5000 клиник.\n\n📩 Отклики:\nПишите сюда👉 @Edward0076\nВ отклике указывайте:\nСтек и портфолио"
+}
+2025-10-20 00:47:23.518 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот для стоматологических клиник (SaaS, MVP)' post_len=1103
+2025-10-20 00:47:23.518 | INFO     | app.bot.handlers.router:send_project:271 - GPT ok for task 12: title='AI-чат-бот для стоматологических клиник (SaaS, MVP)' post_len=1103
+2025-10-20 00:55:43.683 | DEBUG    | app.bot.handlers.router:on_any_content:196 - No collecting state for user 7022782558, auto-start new draft
+2025-10-20 00:55:43.683 | DEBUG    | app.bot.handlers.router:on_any_content:203 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 00:55:47.120 | INFO     | app.bot.handlers.router:send_project:232 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 00:55:47.251 | INFO     | app.bot.handlers.router:send_project:245 - Draft project saved id=13 by=7022782558 status='новый'
+2025-10-20 00:55:47.916 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-20 00:56:12.575 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот для стоматологических клиник — MVP SaaS",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник — MVP SaaS\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nМы создаем B2B SaaS-продукт для стоматологических клиник в России. Это AI-ассистент, который автоматизирует работу с пациентами и решает критические задачи ниши.\nЗадача — сделать MVP массовым SaaS: обработка текстовых заявок 24/7, квалификация клиентов, запись на прием, напоминания, автоматическое заполнение занятых слотов, работа с листом ожидания и интеграции с CRM (Bitrix24, AmoCRM и др.).\n\n📎 Полное тз по ссылке\ndобавим после согласования\n💸 Оплата и сроки: ставит исполнитель\n\n👨‍💻 Кто нужен в проект:\nРоли: Backend/Frontend разработчики, архитекторы, DevOps; стек: Node.js или Python, React, PostgreSQL, Redis; опыт интеграций с CRM и МИС; multi-channel (WhatsApp, VK, Telegram, Instagram, виджет) и развёртывание на российских серверах; соответствие 152-ФЗ.\n\n📩 Отклики:\nПишите сюда👉 @Edward0076\nВ отклике указывайте: Стек и портфолио"
+}
+2025-10-20 00:56:12.575 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот для стоматологических клиник — MVP SaaS' post_len=933
+2025-10-20 00:56:12.576 | INFO     | app.bot.handlers.router:send_project:271 - GPT ok for task 13: title='AI-чат-бот для стоматологических клиник — MVP SaaS' post_len=933
+2025-10-20 01:00:29.095 | DEBUG    | app.bot.handlers.router:on_any_content:196 - No collecting state for user 7022782558, auto-start new draft
+2025-10-20 01:00:29.096 | DEBUG    | app.bot.handlers.router:on_any_content:203 - Draft updated by 7022782558: texts=1, files=0
+2025-10-20 01:00:36.112 | INFO     | app.bot.handlers.router:send_project:232 - Generation requested by 7022782558 brief_len=3771
+2025-10-20 01:00:36.251 | INFO     | app.bot.handlers.router:send_project:245 - Draft project saved id=14 by=7022782558 status='новый'
+2025-10-20 01:00:36.769 | DEBUG    | app.chat_gpt.service:generate_tg_post:77 - GPT request built. model='gpt-5-nano' brief_len=3771
+2025-10-20 01:00:58.119 | DEBUG    | app.chat_gpt.service:generate_tg_post:87 - GPT raw output (truncated): {
+  "title": "AI-чат-бот для стоматологических клиник (SaaS MVP)",
+  "tg_post": "❗️ AI-чат-бот для стоматологических клиник (SaaS MVP)\n✅ СТАТУС: открыт ✅\n\n✍️ Что за проект:\nСоздаём B2B SaaS для российских клиник. Это AI-ассистент, который автоматизирует рутину администраторов: обрабатывает входящие заявки 24/7, квалифицирует клиентов, записывает на приём, напоминает о визитах и автоматически создаёт карточку клиента в CRM. Архитектура учитывает 152-ФЗ: данные россиян хранятся на российских серверах. Интеграции: Битрикс24, AmoCRM и другие.\n\nЭТАП 1: Базовый чат-бот (MVP)\nЗадача: обрабатывать текстовые заявки и записывать пациентов на приём. Мультиканальность: WhatsApp первым, затем VK, Telegram, Instagram, виджет на сайте. Функционал: отвечает 24/7, квалифицирует, записывает, создаёт CRM-карту.\n\nЭТАП 2: Умная запись и напоминания\nЗадача: работать с реальным расписанием клиники, снижать неявки. Интеграция с календарём/МИС; предложение слотов; напоминания за 48/24/3 часа; интерактивные кнопки: Подтверждаю, Перенести, Отменить.\n\nЭТАП 3: Работа с листом ожидания\nЗадача: автоматически заполнять освободившиеся слоты. По листу ожидания подбираются пациенты, отправляются уведомления, запись идёт к первому согласившемуся.\n\nЭТАП 4 (будущее): Голосовой бот\nОбработка звонков, голосовые напоминания, работа с листом ожидания через звонки.\n\nКРИТИЧЕСКО: 152-ФЗ, данные на российских серверах. Результат этапа: без потерь заявок, автозаполнение CRM, снижение неявок, максимальная загрузка расписания.\n\n📎 Полное тз по ссылке\nдобавим после согласования\n\n💸 Оплата и сроки: ставит исполнитель\n\n👨‍💻 Кто нужен в проект:\nРоли: продуктовый менеджер, Backend/AI-инженер, Frontend, DevOps, QA, безопасность и комплаенс. Стек: Python/Node.js, ML-пайплайны, React/Vue, PostgreSQL, Redis, Kubernetes; REST/gRPC; интеграции с Bitrix24, AmoCRM; мультиканальные каналы. Масштабируемость: 3000-5000+ клиник; надежность 24/7; логирование; данные на российских серверах.\n\n📩 Отклики:\nПишите сюда👉 @Edward0076\nВ отклике указывайте:\nСтек и портфолио"
+}
+2025-10-20 01:00:58.119 | INFO     | app.chat_gpt.service:generate_tg_post:94 - GPT generation ok: title='AI-чат-бот для стоматологических клиник (SaaS MVP)' post_len=1949
+2025-10-20 01:00:58.120 | INFO     | app.bot.handlers.router:send_project:271 - GPT ok for task 14: title='AI-чат-бот для стоматологических клиник (SaaS MVP)' post_len=1949
