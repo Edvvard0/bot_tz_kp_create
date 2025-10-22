@@ -1,3 +1,4 @@
+# app/kp/kp_service.py
 import asyncio
 from openai import AsyncOpenAI
 from docx import Document
@@ -14,7 +15,6 @@ class KPService:
 
     async def generate_kp_content(self, project_description: str) -> str:
         """Генерирует содержание КП через ChatGPT"""
-
         prompt = f"""
         На основе описания проекта создай коммерческое предложение (КП) в формате Markdown. 
         Используй структуру из примера ниже, но адаптируй под конкретный проект.
@@ -84,10 +84,6 @@ class KPService:
 
     def create_kp_markdown(self, kp_content: str, project_name: str) -> str:
         """Создает .md файл с коммерческим предложением"""
-
-        # Создаем папку если нет
-        os.makedirs('generated_kp', exist_ok=True)
-
         # Создаем полное содержание Markdown
         full_content = f"""# Коммерческое предложение: {project_name}
 
@@ -99,9 +95,9 @@ class KPService:
 *Данное коммерческое предложение подготовлено автоматически на основе требований заказчика.*
 """
 
-        # Сохраняем .md файл
+        # Сохраняем .md файл в текущей директории
         filename = f"КП_{project_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
-        filepath = os.path.join('generated_kp', filename)
+        filepath = filename
 
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(full_content)

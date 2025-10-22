@@ -315,59 +315,78 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
         logger.exception("KP generation failed for task {}: {}", task_id, e)
         # Продолжаем работу даже если КП не сгенерировалось
 
-    # 6) ID партнеров
-    BUSINESS_PARTNER_ID = 5254325840
-    TEAM_PARTNER_ID = 7022782558
-
-    # 7) Рассылка материалов ВСЕМ участникам
+    # 6) Рассылка материалов по четкой логике
     try:
-        # Список всех получателей (всегда оба партнера + отправитель)
-        all_partners = [BUSINESS_PARTNER_ID, TEAM_PARTNER_ID]
-        recipients = list(set([user_id] + all_partners))
+        # ВСЕГДА отправляем полные материалы ОТПРАВИТЕЛЮ
+        await send_md_v2_chunked(
+            bot, user_id,
+            text=f"{title}\n\n{brief}",
+            header=f"📎 Сырые материалы клиента (ID: {task_id})",
+        )
+        await send_md_v2_chunked(
+            bot, user_id,
+            text=tg_post,
+            header="📝 Сгенерированный пост",
+        )
 
-        logger.info("Sending materials to recipients: {}", recipients)
+        # Определяем кому какие материалы отправлять
+        if user_id == settings.TEAM_PARTNER_ID:
+            # Если отправил TEAM_PARTNER - BUSINESS_PARTNER получает только уведомление
+            partner_message = f"🆕 Новый проект: {title}. Задача взята в работу."
+            await bot.send_message(settings.BUSINESS_PARTNER_ID, partner_message)
 
-        # Отправляем материалы каждому получателю
-        for recipient_id in recipients:
-            try:
-                is_original_sender = (recipient_id == user_id)
-                is_business_partner = (recipient_id == BUSINESS_PARTNER_ID)
+        elif user_id == settings.BUSINESS_PARTNER_ID:
+            # Если отправил BUSINESS_PARTNER - TEAM_PARTNER получает ВСЕ материалы
+            await send_md_v2_chunked(
+                bot, settings.TEAM_PARTNER_ID,
+                text=f"{title}\n\n{brief}",
+                header=f"📎 Сырые материалы клиента (ID: {task_id})",
+            )
+            await send_md_v2_chunked(
+                bot, settings.TEAM_PARTNER_ID,
+                text=tg_post,
+                header="📝 Сгенерированный пост",
+            )
 
-                # Для отправителя - полные материалы с кнопками
-                if is_original_sender:
-                    await send_md_v2_chunked(
-                        bot, recipient_id,
-                        text=f"{title}\n\n{brief}",
-                        header=f"📎 Сырые материалы клиента (ID: {task_id})",
-                    )
-                    await send_md_v2_chunked(
-                        bot, recipient_id,
-                        text=tg_post,
-                        header="📝 Сгенерированный пост",
-                        reply_markup=review_actions_kb(task_id) if is_business_partner else None,
-                    )
+        else:
+            # Если отправил кто-то другой
+            # TEAM_PARTNER получает ВСЕ материалы
+            await send_md_v2_chunked(
+                bot, settings.TEAM_PARTNER_ID,
+                text=f"{title}\n\n{brief}",
+                header=f"📎 Сырые материалы клиента (ID: {task_id})",
+            )
+            await send_md_v2_chunked(
+                bot, settings.TEAM_PARTNER_ID,
+                text=tg_post,
+                header="📝 Сгенерированный пост",
+            )
+            # BUSINESS_PARTNER получает только уведомление
+            partner_message = f"🆕 Новый проект: {title}. Задача взята в работу."
+            await bot.send_message(settings.BUSINESS_PARTNER_ID, partner_message)
 
-                # Для партнеров - уведомление
-                else:
-                    partner_message = f"🆕 Новый проект: {title}. Задача взята в работу."
-                    await bot.send_message(recipient_id, partner_message)
+        # ВСЕМ отправляем КП файл если он сгенерировался
+        if kp_filepath and os.path.exists(kp_filepath):
+            # Определяем список получателей КП
+            kp_recipients = [user_id, settings.TEAM_PARTNER_ID, settings.BUSINESS_PARTNER_ID]
 
-                # ВСЕМ отправляем КП файл если он сгенерировался
-                if kp_filepath and os.path.exists(kp_filepath):
+            for recipient_id in set(kp_recipients):  # убираем дубликаты
+                try:
                     # Создаем уникальную копию файла для каждого получателя
                     kp_copy_path = kp_filepath.replace('.docx', f'_{recipient_id}.docx')
                     import shutil
                     shutil.copy2(kp_filepath, kp_copy_path)
 
                     await send_kp_document(bot, recipient_id, kp_copy_path, task_id)
+                    logger.info("KP sent to recipient {}", recipient_id)
 
-            except Exception as e:
-                logger.exception("Failed to send to recipient {}: {}", recipient_id, e)
+                except Exception as e:
+                    logger.exception("Failed to send KP to recipient {}: {}", recipient_id, e)
 
         # Финальное уведомление для отправителя
         await bot.send_message(
             user_id,
-            f"✅ Проект #{task_id} обработан. Материалы отправлены всем участникам"
+            f"✅ Проект #{task_id} обработан. Материалы отправлены участникам"
         )
 
     except Exception as e:
@@ -383,8 +402,9 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
         if kp_filepath and os.path.exists(kp_filepath):
             try:
                 os.remove(kp_filepath)
-                # Удаляем все копии файлов
-                for recipient_id in recipients:
+                # Удаляем все возможные копии файлов
+                all_recipients = [user_id, settings.BUSINESS_PARTNER_ID, settings.TEAM_PARTNER_ID]
+                for recipient_id in all_recipients:
                     copy_path = kp_filepath.replace('.docx', f'_{recipient_id}.docx')
                     if os.path.exists(copy_path):
                         os.remove(copy_path)
