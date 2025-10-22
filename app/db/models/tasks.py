@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 from typing import Optional, List
 
@@ -11,6 +11,12 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.database import Base
 from app.db.base import BaseDAO
 from app.db.schemas.tasks import TaskOut
+
+from datetime import datetime
+import pytz
+
+def moscow_now():
+    return datetime.now(pytz.timezone('Europe/Moscow'))
 
 
 class ProjectStatus(str, enum.Enum):
@@ -50,10 +56,9 @@ class Task(Base):
     brief_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow,
-                                                 onupdate=datetime.utcnow, nullable=False)
-
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=moscow_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=moscow_now,
+                                                 onupdate=moscow_now, nullable=False)
 
 class TaskDAO(BaseDAO):
     model = Task
