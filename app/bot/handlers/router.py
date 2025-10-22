@@ -18,6 +18,7 @@ from app.config import settings
 # GPT: вынесенный модуль
 from app.chat_gpt.service import generate_tg_post
 from app.db.models.users import UserDAO  # User(id, username, full_name, is_active)
+from app.scheduler.reminders import schedule_new_task_reminder
 
 router = Router(name="gpt_flow")
 
@@ -227,61 +228,49 @@ async def clear_draft(cb: CallbackQuery, state: FSMContext):
 # ---------- Генерация поста ----------
 @router.callback_query(F.data == "send_project")
 async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
-    """
-    1) Сохраняем черновик задачи (title='Черновик', статус 'новый', created_by, brief_text)
-    2) СРАЗУ уведомляем второго партнёра (коротко) — не ждём GPT
-    3) Генерируем пост через GPT
-    4) Обновляем title задачи
-    5) Рассылаем: СНАЧАЛА весь бриф, ПОТОМ пост
-       - если инициатор TEAM → отправляем BUSINESS
-       - если инициатор BUSINESS → отправляем в этот же чат; TEAM получает короткую пометку
-    """
     user_id = cb.from_user.id
-
-    # --- собрать бриф из FSM ---
     data = await state.get_data()
     brief = _compose_brief_text(data)
     logger.info("Generation requested by {} brief_len={}", user_id, len(brief))
 
-    # --- 1) сохранить черновик сразу ---
+    # 1) Черновик — сразу в БД
     draft_title = "Черновик"
     async with async_session_maker() as session:
         task = await TaskDAO.add(
             session,
             title=draft_title,
-            status=ProjectStatus.new.value,  # хранение по-русски
+            status=ProjectStatus.new.value,
             created_by=user_id,
             brief_text=brief,
         )
         task_id = task.id
     logger.info("Draft project saved id={} by={} status='{}'", task_id, user_id, ProjectStatus.new.value)
 
-    # --- 2) мгновенные уведомления (не ждём GPT) ---
+    # 1.1) Ставим напоминание для 'новый' (сейчас 30 сек из .env)
+    schedule_new_task_reminder(task_id)
+
+    # 2) Мгновенные уведомления (без ожидания GPT)
     try:
         if user_id == settings.TEAM_PARTNER_ID:
-            # инициатор TEAM
             await cb.message.edit_text("✅ Заказ принят в работу. Бизнес-партнёр обработает проект.")
             await send_md_v2_chunked(
-                bot,
-                settings.BUSINESS_PARTNER_ID,
+                bot, settings.BUSINESS_PARTNER_ID,
                 text=f"ID: {task_id}\nЗадача принята в работу. Готовим пост.",
                 header="🆕 Новый проект",
             )
         else:
-            # инициатор BUSINESS (или другой админ)
             await cb.message.edit_text("Принял. Готовлю предпросмотр…")
             await send_md_v2_chunked(
-                bot,
-                settings.TEAM_PARTNER_ID,
+                bot, settings.TEAM_PARTNER_ID,
                 text=f"ID: {task_id}\nЗадача принята в работу.",
                 header="🆕 Новый проект",
             )
     except Exception as e:
         logger.exception("Immediate notify failed: {}", e)
 
-    # --- 3) GPT: генерируем пост ---
+    # 3) GPT
     try:
-        gpt_resp = await generate_tg_post(brief)  # {"title": ..., "tg_post": ...}
+        gpt_resp = await generate_tg_post(brief)
         title = (gpt_resp.get("title") or "").strip()[:255] or "Без названия"
         tg_post = (gpt_resp.get("tg_post") or "").strip()
         logger.info("GPT ok for task {}: title='{}' post_len={}", task_id, title, len(tg_post))
@@ -290,80 +279,66 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
         await cb.message.edit_text("❌ Не удалось сгенерировать пост. Попробуйте ещё раз /new.")
         return
 
-    # --- 4) обновить название у сохранённой задачи ---
+    # 4) Обновим title у задачи
     async with async_session_maker() as session:
         await TaskDAO.update(session, {"id": task_id}, title=title)
 
-    # --- 5) рассылка: СНАЧАЛА бриф → ПОТОМ пост ---
+    # 5) Рассылка: СНАЧАЛА бриф → ПОТОМ пост (с кнопками, где task_id в callback_data)
     try:
         if user_id == settings.TEAM_PARTNER_ID:
-            # инициатор TEAM → бизнес-партнёру уходит: бриф, затем пост с кнопками
             await send_md_v2_chunked(
-                bot,
-                settings.BUSINESS_PARTNER_ID,
+                bot, settings.BUSINESS_PARTNER_ID,
                 text=f"{title}\n\n{brief}",
                 header=f"📎 Сырые материалы клиента (ID: {task_id})",
             )
             await send_md_v2_chunked(
-                bot,
-                settings.BUSINESS_PARTNER_ID,
-                text=tg_post,
-                header="📝 Сгенерированный пост",
-                reply_markup=review_actions_kb(task_id),  # важно передавать task_id
-            )
-
-            # TEAM готов к следующему проекту
-            await state.set_state(Draft.collecting)
-            await state.update_data(texts=[], files=[])
-
-        else:
-            # инициатор BUSINESS → в текущем чате: бриф, затем пост с кнопками
-            await send_md_v2_chunked(
-                bot,
-                cb.from_user.id,
-                text=f"{title}\n\n{brief}",
-                header=f"📎 Сырые материалы клиента (ID: {task_id})",
-            )
-            await send_md_v2_chunked(
-                bot,
-                cb.from_user.id,
+                bot, settings.BUSINESS_PARTNER_ID,
                 text=tg_post,
                 header="📝 Сгенерированный пост",
                 reply_markup=review_actions_kb(task_id),
             )
-
-            # TEAM получает только короткую пометку (без брифа/поста)
+            await state.set_state(Draft.collecting)
+            await state.update_data(texts=[], files=[])
+        else:
             await send_md_v2_chunked(
-                bot,
-                settings.TEAM_PARTNER_ID,
+                bot, cb.from_user.id,
+                text=f"{title}\n\n{brief}",
+                header=f"📎 Сырые материалы клиента (ID: {task_id})",
+            )
+            await send_md_v2_chunked(
+                bot, cb.from_user.id,
+                text=tg_post,
+                header="📝 Сгенерированный пост",
+                reply_markup=review_actions_kb(task_id),
+            )
+            await send_md_v2_chunked(
+                bot, settings.TEAM_PARTNER_ID,
                 text=f"ID: {task_id}\nЗадача взята в работу.",
                 header=f"🆕 Новый проект: {title}",
             )
-
     except Exception as e:
         logger.exception("Dispatch (brief+post) failed: {}", e)
 
 
 # ---------- Одобрение / Перегенерация / Отмена ----------
 def _parse_task_id(data: str) -> int | None:
-    # ожидаем форматы post:approve:<id> / post:regen:<id> / post:cancel:<id>
     try:
         return int(data.split(":")[2])
     except Exception:
         return None
-
 
 @router.callback_query(F.data.startswith("post:approve:"))
 async def cb_post_approve(cb: CallbackQuery, state: FSMContext):
     if cb.from_user.id != settings.BUSINESS_PARTNER_ID:
         await cb.answer("Нет прав на действие", show_alert=True)
         return
+
     task_id = _parse_task_id(cb.data)
     if not task_id:
         await cb.answer("task_id не найден", show_alert=True)
         return
 
-    # можно зафиксировать статус, если хочешь (например, "составляется тз/кп")
+    # При одобрении считаем, что статус меняется с 'новый' → что-то другое (например, 'составляется тз/кп')
     async with async_session_maker() as session:
         await TaskDAO.update(session, {"id": task_id}, status=ProjectStatus.drafting_tz_kp.value)
 
@@ -371,7 +346,6 @@ async def cb_post_approve(cb: CallbackQuery, state: FSMContext):
     try:
         await cb.message.edit_text("✅ Одобрено и сохранено. Готов к следующему проекту.")
     except Exception:
-        # сообщение могло быть не тем, где есть кнопки — просто ответим алертом
         pass
     logger.info("Post approved by {} for task {}", cb.from_user.id, task_id)
 
@@ -381,10 +355,12 @@ async def cb_post_cancel(cb: CallbackQuery, state: FSMContext):
     if cb.from_user.id != settings.BUSINESS_PARTNER_ID:
         await cb.answer("Нет прав на действие", show_alert=True)
         return
+
     task_id = _parse_task_id(cb.data)
     if not task_id:
         await cb.answer("task_id не найден", show_alert=True)
         return
+
     await cb.answer("Отменено")
     try:
         await cb.message.edit_text("❌ Отменено. Чтобы начать заново — пришли материалы или /new.")
@@ -398,12 +374,15 @@ async def cb_post_regen(cb: CallbackQuery, state: FSMContext, bot: Bot):
     if cb.from_user.id != settings.BUSINESS_PARTNER_ID:
         await cb.answer("Нет прав на действие", show_alert=True)
         return
+
     task_id = _parse_task_id(cb.data)
     if not task_id:
         await cb.answer("task_id не найден", show_alert=True)
         return
 
-    # достаём brief_text из БД и генерируем новую версию
+    await cb.answer("Перегенерирую…")
+
+    # берём бриф из БД
     async with async_session_maker() as session:
         task = await TaskDAO.find_one_or_none_by_id(session, task_id)
         if not task or not getattr(task, "brief_text", None):
@@ -411,12 +390,11 @@ async def cb_post_regen(cb: CallbackQuery, state: FSMContext, bot: Bot):
             return
         brief = task.brief_text
 
-    await cb.answer("Перегенерирую…")
     try:
         gpt_resp = await generate_tg_post(brief)
-        new_title = gpt_resp["title"].strip()[:255] or "Без названия"
-        new_post = gpt_resp["tg_post"].strip()
-        # опционально — обновим title в БД
+        new_title = (gpt_resp.get("title") or "").strip()[:255] or "Без названия"
+        new_post = (gpt_resp.get("tg_post") or "").strip()
+
         async with async_session_maker() as session:
             await TaskDAO.update(session, {"id": task_id}, title=new_title)
     except Exception as e:
@@ -424,13 +402,12 @@ async def cb_post_regen(cb: CallbackQuery, state: FSMContext, bot: Bot):
         await cb.message.answer("❌ Ошибка генерации. Попробуйте ещё раз позже.")
         return
 
-    # шлём новую версию: сначала заголовок/лейбл, затем сам пост (частями), с кнопками
     try:
         await send_md_v2_chunked(
             bot, cb.from_user.id,
             text=new_post,
             header=f"🔁 Новая версия поста (ID: {task_id}) — {new_title}",
-            reply_markup=review_actions_kb(task_id)
+            reply_markup=review_actions_kb(task_id),
         )
     except Exception as e:
         logger.exception("Send new version failed: {}", e)

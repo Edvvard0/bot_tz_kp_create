@@ -15,6 +15,7 @@ from app.bot.keyboards.kbs import (
     status_choice_kb,
     persistent_projects_keyboard,
 )
+from app.scheduler.reminders import schedule_new_task_reminder, cancel_task_reminder
 
 router = Router(name="projects")
 
@@ -141,53 +142,53 @@ async def proj_set_status(cb: CallbackQuery, bot: Bot):
     _, s_task_id, s_index, enum_name = cb.data.split(":")
     task_id = int(s_task_id); index = int(s_index)
 
-    # валидируем enum и берём РУССКОЕ значение
     if enum_name not in ProjectStatus.__members__:
         await cb.answer("Неизвестный статус", show_alert=True)
         return
     new_status_ru = ProjectStatus[enum_name].value
 
-    # обновляем статус в БД
     async with async_session_maker() as session:
         updated = await TaskDAO.update(session, {"id": task_id}, status=new_status_ru)
         if not updated:
             await cb.answer("Не удалось обновить статус", show_alert=True)
             return
-
-        # получим карточку для уведомления (достаточно title/status/created_at)
-        # используем find_one_or_none_by_id из BaseDAO (возвращает ORM Task)
         task = await TaskDAO.find_one_or_none_by_id(session, task_id)
 
     logger.info("Task {} status changed to '{}' by {}", task_id, new_status_ru, cb.from_user.id)
     await cb.answer("Статус обновлён")
 
+    # 🔔 управление напоминаниями
+    if new_status_ru == ProjectStatus.new.value:
+        schedule_new_task_reminder(task_id)
+    else:
+        cancel_task_reminder(task_id)
+
     # уведомим «второго партнёра»
     actor = cb.from_user.id
-    # определим адресата
     if actor == settings.BUSINESS_PARTNER_ID:
-        recipient_ids = [settings.TEAM_PARTNER_ID]
+        recipients = [settings.TEAM_PARTNER_ID]
     elif actor == settings.TEAM_PARTNER_ID:
-        recipient_ids = [settings.BUSINESS_PARTNER_ID]
+        recipients = [settings.BUSINESS_PARTNER_ID]
     else:
-        # если третий админ — всем из ADMIN_IDS, кроме инициатора
-        recipient_ids = [uid for uid in (settings.ADMIN_IDS or []) if uid != actor]
+        recipients = [uid for uid in (settings.ADMIN_IDS or []) if uid != actor]
 
-    # соберём безопасный текст
-    title = getattr(task, "title", "")
+    title = getattr(task, "title", "") or ""
     created_at = getattr(task, "created_at", None)
     created_str = created_at.strftime("%d.%m.%Y %H:%M") if created_at else "-"
 
-    header = escape_md_v2("🔔 Изменён статус проекта")
-    safe_title = escape_md_v2(title)
-    safe_status = escape_md_v2(new_status_ru)
-    safe_created = escape_md_v2(created_str)
-    body = f"{header}\n\n*{safe_title}*\nСтатус: {safe_status}\nСоздан: {safe_created}"
+    def esc(x: str) -> str:
+        import re
+        return re.sub(r'([_*[\]()~`>#+\-=|{}.!])', r'\\\1', x or "")
 
-    for uid in recipient_ids:
+    header = esc("🔔 Изменён статус проекта")
+    msg = f"{header}\n\n*{esc(title)}*\nСтатус: {esc(new_status_ru)}\nСоздан: {esc(created_str)}"
+
+    for uid in recipients:
         try:
-            await bot.send_message(chat_id=uid, text=body, parse_mode=ParseMode.MARKDOWN_V2)
+            await bot.send_message(chat_id=uid, text=msg, parse_mode=ParseMode.MARKDOWN_V2)
         except Exception as e:
             logger.exception("Notify partner {} failed: {}", uid, e)
 
-    # перерисовываем карточку на том же индексе
+    # перерисуем карточку
     await _send_project_by_index(cb, index=index)
+

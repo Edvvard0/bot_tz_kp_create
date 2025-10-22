@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     BUSINESS_PARTNER_ID: int
     TEAM_PARTNER_ID: int
 
+    REMINDER_DELAY_SECONDS_NEW: int = 7200
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
