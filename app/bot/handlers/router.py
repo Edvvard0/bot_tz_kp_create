@@ -1,13 +1,15 @@
 from __future__ import annotations
 import re
+import os
 from typing import Any
+from pathlib import Path
 
 from aiogram import Router, F, Bot
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from loguru import logger
 
 from app.bot.keyboards.kbs import draft_actions_kb, review_actions_kb, persistent_projects_keyboard
@@ -17,23 +19,26 @@ from app.config import settings
 
 # GPT: вынесенный модуль
 from app.chat_gpt.service import generate_tg_post
-from app.db.models.users import UserDAO  # User(id, username, full_name, is_active)
+from app.db.models.users import UserDAO
 from app.scheduler.reminders import schedule_new_task_reminder
+
+# Импортируем сервис генерации КП
+from app.chat_gpt.kp_service import KPService, generate_kp_for_project
 
 router = Router(name="gpt_flow")
 
 WELCOME = (
     "Привет! Я помогу быстро создавать:\n"
     "• пост для TG-канала по брифу клиента,\n"
+    "• коммерческое предложение в формате Word,\n"
     "• (скоро) объявление для биржи,\n"
     "• (скоро) черновики ТЗ/КП в Google Docs.\n\n"
     "Скинь подряд все сообщения/файлы от клиента, затем нажми «Отправить проект»."
 )
 
-
-
 # ---- MarkdownV2 экранирование ----
 MDV2_SPECIALS = r'[_*[\]()~`>#+\-=|{}.!]'
+
 
 def escape_md_v2(text: str) -> str:
     if not text:
@@ -43,6 +48,7 @@ def escape_md_v2(text: str) -> str:
 
 TELEGRAM_MAX = 4096
 SAFE_CHUNK = 3500  # запас под экранирование/служебные символы
+
 
 def _split_text(text: str, max_len: int = SAFE_CHUNK) -> list[str]:
     if not text:
@@ -64,13 +70,14 @@ def _split_text(text: str, max_len: int = SAFE_CHUNK) -> list[str]:
         parts.append(cur)
     return [p for p in parts if p]
 
+
 async def send_md_v2_chunked(
-    bot: Bot,
-    chat_id: int,
-    text: str,
-    *,
-    header: str | None = None,
-    reply_markup=None
+        bot: Bot,
+        chat_id: int,
+        text: str,
+        *,
+        header: str | None = None,
+        reply_markup=None
 ):
     """
     Безопасно шлёт длинные сообщения:
@@ -100,6 +107,33 @@ async def send_md_v2_chunked(
             reply_markup=reply_markup if first and reply_markup is not None else None
         )
         first = False
+
+
+async def send_kp_document(bot: Bot, chat_id: int, kp_filepath: str, task_id: int):
+    """Отправляет файл КП и удаляет его после отправки"""
+    try:
+        # Отправляем файл
+        file = FSInputFile(kp_filepath)
+        await bot.send_document(
+            chat_id=chat_id,
+            document=file,
+            caption=f"📄 Коммерческое предложение для проекта #{task_id}"
+        )
+
+        # Удаляем файл после отправки
+        if os.path.exists(kp_filepath):
+            os.remove(kp_filepath)
+            logger.info("KP file deleted: {}", kp_filepath)
+
+    except Exception as e:
+        logger.exception("Failed to send KP document: {}", e)
+        # Пытаемся удалить файл даже если отправка не удалась
+        if os.path.exists(kp_filepath):
+            try:
+                os.remove(kp_filepath)
+            except:
+                pass
+
 
 # ---------------- FSM ----------------
 class Draft(StatesGroup):
@@ -225,7 +259,7 @@ async def clear_draft(cb: CallbackQuery, state: FSMContext):
     logger.debug("Draft cleared by {}", cb.from_user.id)
 
 
-# ---------- Генерация поста ----------
+# ---------- Генерация поста и КП ----------
 @router.callback_query(F.data == "send_project")
 async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = cb.from_user.id
@@ -246,29 +280,16 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
         task_id = task.id
     logger.info("Draft project saved id={} by={} status='{}'", task_id, user_id, ProjectStatus.new.value)
 
-    # 1.1) Ставим напоминание для 'новый' (сейчас 30 сек из .env)
+    # 1.1) Ставим напоминание для ОБОИХ партнеров
     schedule_new_task_reminder(task_id)
 
-    # 2) Мгновенные уведомления (без ожидания GPT)
+    # 2) Мгновенные уведомления пользователю
     try:
-        if user_id == settings.TEAM_PARTNER_ID:
-            await cb.message.edit_text("✅ Заказ принят в работу. Бизнес-партнёр обработает проект.")
-            await send_md_v2_chunked(
-                bot, settings.BUSINESS_PARTNER_ID,
-                text=f"ID: {task_id}\nЗадача принята в работу. Готовим пост.",
-                header="🆕 Новый проект",
-            )
-        else:
-            await cb.message.edit_text("Принял. Готовлю предпросмотр…")
-            await send_md_v2_chunked(
-                bot, settings.TEAM_PARTNER_ID,
-                text=f"ID: {task_id}\nЗадача принята в работу.",
-                header="🆕 Новый проект",
-            )
+        await cb.message.edit_text("Принял. Готовлю пост и КП…")
     except Exception as e:
-        logger.exception("Immediate notify failed: {}", e)
+        logger.exception("Edit message failed: {}", e)
 
-    # 3) GPT
+    # 3) GPT - генерация поста
     try:
         gpt_resp = await generate_tg_post(brief)
         title = (gpt_resp.get("title") or "").strip()[:255] or "Без названия"
@@ -283,41 +304,92 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
     async with async_session_maker() as session:
         await TaskDAO.update(session, {"id": task_id}, title=title)
 
-    # 5) Рассылка: СНАЧАЛА бриф → ПОТОМ пост (с кнопками, где task_id в callback_data)
+    # 5) Генерация КП
+    kp_filepath = None
     try:
-        if user_id == settings.TEAM_PARTNER_ID:
-            await send_md_v2_chunked(
-                bot, settings.BUSINESS_PARTNER_ID,
-                text=f"{title}\n\n{brief}",
-                header=f"📎 Сырые материалы клиента (ID: {task_id})",
-            )
-            await send_md_v2_chunked(
-                bot, settings.BUSINESS_PARTNER_ID,
-                text=tg_post,
-                header="📝 Сгенерированный пост",
-                reply_markup=review_actions_kb(task_id),
-            )
-            await state.set_state(Draft.collecting)
-            await state.update_data(texts=[], files=[])
-        else:
-            await send_md_v2_chunked(
-                bot, cb.from_user.id,
-                text=f"{title}\n\n{brief}",
-                header=f"📎 Сырые материалы клиента (ID: {task_id})",
-            )
-            await send_md_v2_chunked(
-                bot, cb.from_user.id,
-                text=tg_post,
-                header="📝 Сгенерированный пост",
-                reply_markup=review_actions_kb(task_id),
-            )
-            await send_md_v2_chunked(
-                bot, settings.TEAM_PARTNER_ID,
-                text=f"ID: {task_id}\nЗадача взята в работу.",
-                header=f"🆕 Новый проект: {title}",
-            )
+        logger.info("Generating KP for task {}...", task_id)
+        kp_service = KPService()
+        kp_filepath = await kp_service.create_kp_document(brief, title)
+        logger.info("KP generated successfully: {}", kp_filepath)
     except Exception as e:
-        logger.exception("Dispatch (brief+post) failed: {}", e)
+        logger.exception("KP generation failed for task {}: {}", task_id, e)
+        # Продолжаем работу даже если КП не сгенерировалось
+
+    # 6) ID партнеров
+    BUSINESS_PARTNER_ID = 5254325840
+    TEAM_PARTNER_ID = 7022782558
+
+    # 7) Рассылка материалов ВСЕМ участникам
+    try:
+        # Список всех получателей (всегда оба партнера + отправитель)
+        all_partners = [BUSINESS_PARTNER_ID, TEAM_PARTNER_ID]
+        recipients = list(set([user_id] + all_partners))
+
+        logger.info("Sending materials to recipients: {}", recipients)
+
+        # Отправляем материалы каждому получателю
+        for recipient_id in recipients:
+            try:
+                is_original_sender = (recipient_id == user_id)
+                is_business_partner = (recipient_id == BUSINESS_PARTNER_ID)
+
+                # Для отправителя - полные материалы с кнопками
+                if is_original_sender:
+                    await send_md_v2_chunked(
+                        bot, recipient_id,
+                        text=f"{title}\n\n{brief}",
+                        header=f"📎 Сырые материалы клиента (ID: {task_id})",
+                    )
+                    await send_md_v2_chunked(
+                        bot, recipient_id,
+                        text=tg_post,
+                        header="📝 Сгенерированный пост",
+                        reply_markup=review_actions_kb(task_id) if is_business_partner else None,
+                    )
+
+                # Для партнеров - уведомление
+                else:
+                    partner_message = f"🆕 Новый проект: {title}. Задача взята в работу."
+                    await bot.send_message(recipient_id, partner_message)
+
+                # ВСЕМ отправляем КП файл если он сгенерировался
+                if kp_filepath and os.path.exists(kp_filepath):
+                    # Создаем уникальную копию файла для каждого получателя
+                    kp_copy_path = kp_filepath.replace('.docx', f'_{recipient_id}.docx')
+                    import shutil
+                    shutil.copy2(kp_filepath, kp_copy_path)
+
+                    await send_kp_document(bot, recipient_id, kp_copy_path, task_id)
+
+            except Exception as e:
+                logger.exception("Failed to send to recipient {}: {}", recipient_id, e)
+
+        # Финальное уведомление для отправителя
+        await bot.send_message(
+            user_id,
+            f"✅ Проект #{task_id} обработан. Материалы отправлены всем участникам"
+        )
+
+    except Exception as e:
+        logger.exception("Dispatch failed: {}", e)
+
+    # 8) Финальная очистка
+    finally:
+        # Очищаем состояние
+        await state.set_state(Draft.collecting)
+        await state.update_data(texts=[], files=[])
+
+        # Удаляем временные файлы если остались
+        if kp_filepath and os.path.exists(kp_filepath):
+            try:
+                os.remove(kp_filepath)
+                # Удаляем все копии файлов
+                for recipient_id in recipients:
+                    copy_path = kp_filepath.replace('.docx', f'_{recipient_id}.docx')
+                    if os.path.exists(copy_path):
+                        os.remove(copy_path)
+            except Exception as e:
+                logger.exception("Failed to clean up KP files: {}", e)
 
 
 # ---------- Одобрение / Перегенерация / Отмена ----------
@@ -326,6 +398,7 @@ def _parse_task_id(data: str) -> int | None:
         return int(data.split(":")[2])
     except Exception:
         return None
+
 
 @router.callback_query(F.data.startswith("post:approve:"))
 async def cb_post_approve(cb: CallbackQuery, state: FSMContext):

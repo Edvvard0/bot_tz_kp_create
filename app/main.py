@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from loguru import logger
 
 from app.bot.handlers.projects_router import router as projects_router
 from app.bot.handlers.router import router as gpt_router
@@ -43,7 +44,7 @@ async def main():
         except NotImplementedError:
             pass
 
-    print("Bot started")
+    logger.info("Bot started")
     polling = asyncio.create_task(dp.start_polling(bot))
     await stop_event.wait()
     polling.cancel()
