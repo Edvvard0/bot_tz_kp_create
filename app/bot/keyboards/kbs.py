@@ -13,10 +13,18 @@ def draft_actions_kb() -> InlineKeyboardMarkup:
 
 def review_actions_kb(task_id: int) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
-    kb.button(text="✅ Одобрить", callback_data=f"post:approve:{task_id}")
-    kb.button(text="🔁 Перегенерировать", callback_data=f"post:regen:{task_id}")
+    kb.button(text="✅ Одобрить пост", callback_data=f"post:approve:{task_id}")
+    kb.button(text="🔁 Перегенерировать пост", callback_data=f"post:regen:{task_id}")
+    kb.button(text="📄 Перегенерировать КП", callback_data=f"kp:regen:{task_id}")
     kb.button(text="❌ Отмена", callback_data=f"post:cancel:{task_id}")
     kb.adjust(1)
+    return kb.as_markup()
+
+def kp_actions_kb(task_id: int) -> InlineKeyboardMarkup:
+    """Клавиатура для действий с КП"""
+    kb = InlineKeyboardBuilder()
+    kb.button(text="📄 Перегенерировать КП", callback_data=f"kp:regen:{task_id}")
+    kb.button(text="✅ Готово", callback_data=f"kp:approve:{task_id}")
     return kb.as_markup()
 
 

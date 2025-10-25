@@ -1,11 +1,9 @@
 import asyncio
 from openai import AsyncOpenAI
-from docx import Document
 from datetime import datetime
 import os
-from pathlib import Path
 from app.config import settings
-from app.chat_gpt.konvert_md_docx import convert_markdown_to_word
+from app.chat_gpt.utils.konvert_md_docx import convert_markdown_to_word
 
 
 class KPService:
@@ -86,7 +84,7 @@ class KPService:
         """Создает .md файл с коммерческим предложением"""
 
         # Создаем папку если нет
-        os.makedirs('generated_kp', exist_ok=True)
+        os.makedirs('../generated_kp', exist_ok=True)
 
         # Создаем полное содержание Markdown
         full_content = f"""# Коммерческое предложение: {project_name}
@@ -101,7 +99,7 @@ class KPService:
 
         # Сохраняем .md файл
         filename = f"КП_{project_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
-        filepath = os.path.join('generated_kp', filename)
+        filepath = os.path.join('../generated_kp', filename)
 
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(full_content)

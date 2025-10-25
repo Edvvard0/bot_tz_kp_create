@@ -12,7 +12,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from loguru import logger
 
-from app.bot.keyboards.kbs import draft_actions_kb, review_actions_kb, persistent_projects_keyboard
+from app.bot.keyboards.kbs import draft_actions_kb, review_actions_kb, persistent_projects_keyboard, kp_actions_kb
 from app.db.database import async_session_maker
 from app.db.models.tasks import ProjectStatus, TaskDAO
 from app.config import settings
@@ -112,12 +112,21 @@ async def send_md_v2_chunked(
 async def send_kp_document(bot: Bot, chat_id: int, kp_filepath: str, task_id: int):
     """Отправляет файл КП и удаляет его после отправки"""
     try:
-        # Отправляем файл
         file = FSInputFile(kp_filepath)
+
+        # Определяем тип файла для caption
+        file_ext = os.path.splitext(kp_filepath)[1].lower()
+        if file_ext == '.pdf':
+            file_type = "📄 Коммерческое предложение (PDF)"
+        elif file_ext == '.docx':
+            file_type = "📝 Коммерческое предложение (Word)"
+        else:
+            file_type = "📋 Коммерческое предложение"
+
         await bot.send_document(
             chat_id=chat_id,
             document=file,
-            caption=f"📄 Коммерческое предложение для проекта #{task_id}"
+            caption=f"{file_type} для проекта #{task_id}"
         )
 
         # Удаляем файл после отправки
@@ -127,7 +136,6 @@ async def send_kp_document(bot: Bot, chat_id: int, kp_filepath: str, task_id: in
 
     except Exception as e:
         logger.exception("Failed to send KP document: {}", e)
-        # Пытаемся удалить файл даже если отправка не удалась
         if os.path.exists(kp_filepath):
             try:
                 os.remove(kp_filepath)
@@ -304,7 +312,7 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
     async with async_session_maker() as session:
         await TaskDAO.update(session, {"id": task_id}, title=title)
 
-    # 5) Генерация КП
+    # 5) Генерация КП в PDF
     kp_filepath = None
     try:
         logger.info("Generating KP for task {}...", task_id)
@@ -323,10 +331,13 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
             text=f"{title}\n\n{brief}",
             header=f"📎 Сырые материалы клиента (ID: {task_id})",
         )
+
+        # Отправляем пост с кнопками перегенерации ОТПРАВИТЕЛЮ
         await send_md_v2_chunked(
             bot, user_id,
             text=tg_post,
             header="📝 Сгенерированный пост",
+            reply_markup=review_actions_kb(task_id)
         )
 
         # Определяем кому какие материалы отправлять
@@ -346,6 +357,7 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
                 bot, settings.TEAM_PARTNER_ID,
                 text=tg_post,
                 header="📝 Сгенерированный пост",
+                reply_markup=review_actions_kb(task_id)
             )
 
         else:
@@ -360,6 +372,7 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
                 bot, settings.TEAM_PARTNER_ID,
                 text=tg_post,
                 header="📝 Сгенерированный пост",
+                reply_markup=review_actions_kb(task_id)
             )
             # BUSINESS_PARTNER получает только уведомление
             partner_message = f"🆕 Новый проект: {title}. Задача взята в работу."
@@ -373,11 +386,19 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
             for recipient_id in set(kp_recipients):  # убираем дубликаты
                 try:
                     # Создаем уникальную копию файла для каждого получателя
-                    kp_copy_path = kp_filepath.replace('.docx', f'_{recipient_id}.docx')
+                    kp_copy_path = kp_filepath.replace('.pdf', f'_{recipient_id}.pdf')
                     import shutil
                     shutil.copy2(kp_filepath, kp_copy_path)
 
                     await send_kp_document(bot, recipient_id, kp_copy_path, task_id)
+
+                    # Отправляем клавиатуру действий с КП
+                    await bot.send_message(
+                        recipient_id,
+                        f"📄 КП для проекта #{task_id} готово. Что делаем дальше?",
+                        reply_markup=kp_actions_kb(task_id)
+                    )
+
                     logger.info("KP sent to recipient {}", recipient_id)
 
                 except Exception as e:
@@ -402,10 +423,10 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
         if kp_filepath and os.path.exists(kp_filepath):
             try:
                 os.remove(kp_filepath)
-                # Удаляем все возможные копии файлов
+                # Удаляем все возможные копии файлов PDF
                 all_recipients = [user_id, settings.BUSINESS_PARTNER_ID, settings.TEAM_PARTNER_ID]
                 for recipient_id in all_recipients:
-                    copy_path = kp_filepath.replace('.docx', f'_{recipient_id}.docx')
+                    copy_path = kp_filepath.replace('.pdf', f'_{recipient_id}.pdf')
                     if os.path.exists(copy_path):
                         os.remove(copy_path)
             except Exception as e:
@@ -504,3 +525,65 @@ async def cb_post_regen(cb: CallbackQuery, state: FSMContext, bot: Bot):
         )
     except Exception as e:
         logger.exception("Send new version failed: {}", e)
+
+
+@router.callback_query(F.data.startswith("kp:regen:"))
+async def cb_kp_regen(cb: CallbackQuery, bot: Bot):
+    """Перегенерация КП"""
+    if cb.from_user.id not in (settings.ADMIN_IDS or []):
+        await cb.answer("Нет прав на действие", show_alert=True)
+        return
+
+    task_id = _parse_task_id(cb.data)
+    if not task_id:
+        await cb.answer("task_id не найден", show_alert=True)
+        return
+
+    await cb.answer("Перегенерирую КП…")
+
+    # Берем бриф из БД
+    async with async_session_maker() as session:
+        task = await TaskDAO.find_one_or_none_by_id(session, task_id)
+        if not task or not getattr(task, "brief_text", None):
+            await cb.answer("Бриф не найден", show_alert=True)
+            return
+        brief = task.brief_text
+        title = getattr(task, "title", "Проект")
+
+    try:
+        # Генерируем новое КП
+        kp_filepath = await generate_kp_for_project(brief, title)
+
+        # Отправляем новое КП
+        await send_kp_document(bot, cb.from_user.id, kp_filepath, task_id)
+
+        # Отправляем клавиатуру действий
+        await bot.send_message(
+            cb.from_user.id,
+            "📄 Новое КП сгенерировано. Что делаем дальше?",
+            reply_markup=kp_actions_kb(task_id)
+        )
+
+    except Exception as e:
+        logger.exception("KP regen failed for task {}: {}", task_id, e)
+        await cb.message.answer("❌ Ошибка генерации КП. Попробуйте ещё раз позже.")
+
+
+@router.callback_query(F.data.startswith("kp:approve:"))
+async def cb_kp_approve(cb: CallbackQuery):
+    """Подтверждение КП"""
+    if cb.from_user.id not in (settings.ADMIN_IDS or []):
+        await cb.answer("Нет прав на действие", show_alert=True)
+        return
+
+    task_id = _parse_task_id(cb.data)
+    if not task_id:
+        await cb.answer("task_id не найден", show_alert=True)
+        return
+
+    await cb.answer("КП подтверждено")
+    try:
+        await cb.message.edit_text("✅ КП подтверждено. Готов к следующему проекту.")
+    except Exception:
+        pass
+    logger.info("KP approved by {} for task {}", cb.from_user.id, task_id)

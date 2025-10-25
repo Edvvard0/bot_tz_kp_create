@@ -342,8 +342,8 @@ def convert_multiple_files(input_files, output_directory=None):
 # Примеры использования
 if __name__ == "__main__":
     # Пример 1: Конвертация одного файла
-    input_file = "./generated_kp/gg.md"
-    output_file = "./generated_kp/example.docx"
+    input_file = "../generated_kp/gg.md"
+    output_file = "../generated_kp/example.docx"
 
     success, message = convert_markdown_to_word(input_file, output_file)
     print(f"Результат: {message}")
