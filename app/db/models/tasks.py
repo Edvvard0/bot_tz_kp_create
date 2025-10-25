@@ -8,6 +8,7 @@ from sqlalchemy import String, Integer, DateTime, Enum as SAEnum, func, desc, li
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.chat_gpt.prompts import ProjectType
 from app.db.database import Base
 from app.db.base import BaseDAO
 from app.db.schemas.tasks import TaskOut
@@ -55,6 +56,7 @@ class Task(Base):
     created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # tg id инициатора (бизнес/team)
     brief_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
+    project_type: Mapped[ProjectType] = mapped_column(String(50), default=ProjectType.MINI_APP.value)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=moscow_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=moscow_now,

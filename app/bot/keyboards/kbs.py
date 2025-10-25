@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from app.chat_gpt.prompts import ProjectType
 from app.db.models.tasks import ProjectStatus
 
 
@@ -61,3 +62,18 @@ def status_choice_kb(task_id: int, index: int) -> InlineKeyboardMarkup:
     b.button(text="⬅️ Назад", callback_data=f"proj_nav:back:{index}")
     b.adjust(1)
     return b.as_markup()
+
+
+def project_type_kb() -> InlineKeyboardMarkup:
+    """Клавиатура для выбора типа проекта"""
+    kb = InlineKeyboardBuilder()
+
+    kb.button(text="📱 Mini App/Платформа", callback_data=f"project_type:{ProjectType.MINI_APP.value}")
+    kb.button(text="🤖 Бот", callback_data=f"project_type:{ProjectType.BOT.value}")
+    kb.button(text="🎨 Дизайн/Брендбук", callback_data=f"project_type:{ProjectType.DESIGN.value}")
+    kb.button(text="🌐 Сайт на Tilda", callback_data=f"project_type:{ProjectType.TILDA_SITE.value}")
+    kb.button(text="⚙️ Скрипт", callback_data=f"project_type:{ProjectType.SCRIPT.value}")
+    kb.button(text="🔧 Другое", callback_data=f"project_type:{ProjectType.OTHER.value}")
+
+    kb.adjust(1)
+    return kb.as_markup()

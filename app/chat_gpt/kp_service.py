@@ -1,143 +1,22 @@
 # app/kp/kp_service.py
-import markdown
-from fpdf import FPDF
-from loguru import logger
+import asyncio
 from openai import AsyncOpenAI
 from datetime import datetime
 import os
-
-from app.chat_gpt.docx_to_pdf_converter import convert_docx_to_pdf_with_fallback
 from app.config import settings
-from app.chat_gpt.utils.konvert_md_docx import convert_markdown_to_word
+from app.chat_gpt.utils.konvert_md_docx import convert_kp_markdown_to_word
+
+from app.chat_gpt.prompts import get_prompt_by_type, ProjectType
+from loguru import logger
 
 
 class KPService:
     def __init__(self):
         self.client = AsyncOpenAI(api_key=settings.CHAT_GPT_API_KEY)
 
-    async def generate_kp_content(self, project_description: str) -> str:
-        prompt = f"""
-        На основе описания проекта создай коммерческое предложение (КП) в формате Markdown.
-
-        ОПИСАНИЕ ПРОЕКТА:
-        {project_description}
-
-        ПРОАНИЛИЗИРУЙ ОПИСАНИЕ ПРОЕКТА И ОПРЕДЕЛИ ЕГО ТИП:
-
-        - ЕСЛИ это Mini App, платформа или веб-приложение с бэкендом → используй структуру с 4 этапами
-        - ЕСЛИ это дизайн, брендбук или айдентика → используй структуру с 3 этапами  
-        - ЕСЛИ это скрипт, интеграция API или автоматизация → используй структуру с 1 этапом
-        - ЕСЛИ это сайт на конструкторе или лендинг → используй структуру с 1 этапом
-        - ЕСЛИ проект нестандартный → адаптируй этапы под задачу
-
-        СТРУКТУРА КОММЕРЧЕСКОГО ПРЕДЛОЖЕНИЯ В MARKDOWN:
-
-        # Проект: [Название проекта]
-
-        ## План работы
-
-        ### Краткое описание проекта:
-        [2-3 предложения о сути проекта]
-
-        [ВСТАВЬ ПОДХОДЯЩИЕ ЭТАПЫ НА ОСНОВЕ АНАЛИЗА ПРОЕКТА]
-
-        ### Цена/Сроки/Этапы
-
-        | **Этапы** | **Сроки** | **Цена** |
-        |-----------|-----------|----------|
-        [ВСТАВЬ ЭТАПЫ С РЕАЛИСТИЧНЫМИ СРОКАМИ И СТОИМОСТЬЮ]
-        | **Итог:** | **[общее время]** | **[общая стоимость]** |
-
-        ---
-
-        **ШАБЛОНЫ ДЛЯ РАЗНЫХ ТИПОВ ПРОЕКТОВ:**
-
-        **ДЛЯ MINI APP / ПЛАТФОРМ:**
-        ```
-        ### Этап 1: Frontend (React/vite)
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | [Компонент] | [Конкретный функционал] |
-        | [Компонент] | [Конкретный функционал] |
-
-        ### Этап 2: Backend (FastAPI)
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | [Модуль] | [Конкретный функционал] |
-        | [Модуль] | [Конкретный функционал] |
-
-        ### Этап 3: Дизайн
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | [Элемент] | [Конкретное описание] |
-        | [Элемент] | [Конкретное описание] |
-
-        ### Этап 4: Деплой и тестирование
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | [Задача] | [Конкретные действия] |
-        ```
-
-        **ДЛЯ ДИЗАЙНА / БРЕНДБУКА:**
-        ```
-        ### Этап 1: Разработка основ бренда
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | Разработка логотипа | 3-4 концепции с описанием |
-        | Цветовая палитра | Основные и акцентные цвета |
-        | Типографика | Шрифты для заголовков и текста |
-
-        ### Этап 2: Адаптация и применение
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | Оформление соцсетей | Аватарки, обложки, шаблоны |
-        | Деловые материалы | Презентации, бланки, визитки |
-
-        ### Этап 3: Финальная корректировка и передача
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | Создание брендбука | PDF-руководство с правилами |
-        | Подготовка файлов | Исходники и экспорт |
-        ```
-
-        **ДЛЯ СКРИПТОВ / ИНТЕГРАЦИЙ:**
-        ```
-        ### Этап 1: Разработка Python-скрипта
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | [Техническая задача] | [Конкретная реализация] |
-        | [Техническая задача] | [Конкретная реализация] |
-        | Документация | Инструкция по использованию |
-        ```
-
-        **ДЛЯ САЙТОВ НА КОНСТРУКТОРАХ:**
-        ```
-        ### Этап 1: Создание сайта на Tilda
-
-        | **Задача** | **Детализация** |
-        |------------|-----------------|
-        | [Страница] | [Контент и функционал] |
-        | [Страница] | [Контент и функционал] |
-        | Настройка | SEO, формы, аналитика |
-        ```
-
-        ТРЕБОВАНИЯ:
-        1. Проанализируй тип проекта и выбери подходящую структуру
-        2. Название проекта должно быть привлекательным
-        3. Детализация должна быть конкретной и полезной для разработки
-        4. Сроки и цены должны быть реалистичными
-        5. Сохраняй табличную структуру
-        6. Используй чистый Markdown без HTML
-        7. Не добавляй лишних комментариев
-        """
+    async def generate_kp_content(self, project_description: str, project_type: ProjectType) -> str:
+        """Генерирует содержимое КП с учетом типа проекта"""
+        prompt = get_prompt_by_type(project_type, project_description)
 
         response = await self.client.responses.create(
             model=settings.CHAT_GPT_MODEL,
@@ -168,11 +47,17 @@ class KPService:
 
         return filepath
 
-    def convert_markdown_to_docx(self, md_filepath: str) -> str:
-        """Конвертирует .md файл в .docx"""
+    def convert_markdown_to_docx(self, md_filepath: str, project_name: str) -> str:
+        """Конвертирует .md файл в .docx с логотипом"""
         docx_filepath = md_filepath.replace('.md', '.docx')
 
-        success, message = convert_markdown_to_word(md_filepath, docx_filepath)
+        # Используем новую функцию с поддержкой логотипа
+        success, message = convert_kp_markdown_to_word(
+            md_filepath,
+            docx_filepath,
+            project_name,
+            datetime.now().strftime("%d.%m.%Y")
+        )
 
         if success:
             # Удаляем временный .md файл
@@ -182,29 +67,29 @@ class KPService:
         else:
             raise Exception(f"Ошибка конвертации: {message}")
 
-    async def create_kp_document(self, project_description: str, project_name: str) -> str:
-        """Основная функция: создает КП и возвращает путь к файлу (PDF или DOCX)"""
+    async def create_kp_document(self, project_description: str, project_name: str, project_type: ProjectType) -> str:
+        """Основная функция: создает КП и возвращает путь к файлу"""
 
-        # Генерируем содержимое КП
-        kp_content = await self.generate_kp_content(project_description)
+        # Генерируем содержимое КП с учетом типа
+        kp_content = await self.generate_kp_content(project_description, project_type)
 
         # Создаем Markdown файл
         md_filepath = self.create_kp_markdown(kp_content, project_name)
 
-        # Конвертируем в DOCX
-        docx_filepath = self.convert_markdown_to_docx(md_filepath)
+        # Конвертируем в DOCX с логотипом
+        docx_filepath = self.convert_markdown_to_docx(md_filepath, project_name)
 
-        # Пытаемся конвертировать DOCX в PDF
-        final_filepath = convert_docx_to_pdf_with_fallback(docx_filepath)
+        # Пытаемся конвертировать DOCX в PDF (оставляем логику на будущее)
+        # final_filepath = convert_docx_to_pdf_with_fallback(docx_filepath)
 
-        logger.info(f"KP document created: {final_filepath}")
-        return final_filepath
+        logger.info(f"KP document created: {docx_filepath}")
+        return docx_filepath  # Возвращаем DOCX
 
 
 # Функция для использования в боте
-async def generate_kp_for_project(project_description: str, project_name: str) -> str:
+async def generate_kp_for_project(project_description: str, project_name: str, project_type: ProjectType) -> str:
     """
-    Генерирует КП для проекта и возвращает путь к .docx файлу
+    Генерирует КП для проекта и возвращает путь к файлу
     """
     kp_service = KPService()
-    return await kp_service.create_kp_document(project_description, project_name)
+    return await kp_service.create_kp_document(project_description, project_name, project_type)

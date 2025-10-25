@@ -1,3 +1,4 @@
+# app/bot/handlers/router.py
 from __future__ import annotations
 import re
 import os
@@ -12,7 +13,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from loguru import logger
 
-from app.bot.keyboards.kbs import draft_actions_kb, review_actions_kb, persistent_projects_keyboard, kp_actions_kb
+from app.bot.keyboards.kbs import draft_actions_kb, review_actions_kb, persistent_projects_keyboard, kp_actions_kb, \
+    project_type_kb
 from app.db.database import async_session_maker
 from app.db.models.tasks import ProjectStatus, TaskDAO
 from app.config import settings
@@ -24,6 +26,7 @@ from app.scheduler.reminders import schedule_new_task_reminder
 
 # Импортируем сервис генерации КП
 from app.chat_gpt.kp_service import KPService, generate_kp_for_project
+from app.chat_gpt.prompts import ProjectType
 
 router = Router(name="gpt_flow")
 
@@ -33,7 +36,7 @@ WELCOME = (
     "• коммерческое предложение в формате Word,\n"
     "• (скоро) объявление для биржи,\n"
     "• (скоро) черновики ТЗ/КП в Google Docs.\n\n"
-    "Скинь подряд все сообщения/файлы от клиента, затем нажми «Отправить проект»."
+    "Сначала выберите тип проекта, затем скиньте все материалы."
 )
 
 # ---- MarkdownV2 экранирование ----
@@ -145,7 +148,8 @@ async def send_kp_document(bot: Bot, chat_id: int, kp_filepath: str, task_id: in
 
 # ---------------- FSM ----------------
 class Draft(StatesGroup):
-    collecting = State()
+    selecting_type = State()  # Выбор типа проекта
+    collecting = State()  # Сбор материалов
     reviewing = State()
 
 
@@ -188,6 +192,7 @@ def _compose_brief_text(data: dict[str, Any]) -> str:
 
 # ---------- /start ----------
 @router.message(CommandStart())
+@router.message(Command("new"))
 async def cmd_start(m: Message, state: FSMContext):
     user_id = m.from_user.id
     logger.info("Command /start by user_id={} username='{}'", user_id, m.from_user.username)
@@ -211,22 +216,54 @@ async def cmd_start(m: Message, state: FSMContext):
         else:
             logger.debug("User already exists tg_id={}", user_id)
 
-    # Подготовим сбор черновика; выдаём постоянную клавиатуру «Проекты»
+    # Начинаем с выбора типа проекта
     await state.clear()
-    await state.set_state(Draft.collecting)
-    await state.update_data(texts=[], files=[])
-    await m.answer(WELCOME, reply_markup=persistent_projects_keyboard())
-
-
-@router.message(Command("new"))
-async def cmd_new(m: Message, state: FSMContext):
-    await state.clear()
-    await state.set_state(Draft.collecting)
-    await state.update_data(texts=[], files=[])
+    await state.set_state(Draft.selecting_type)
     await m.answer(
-        "Ок, начнём новый черновик. Скинь материалы, затем нажми «Отправить проект».",
-        reply_markup=draft_actions_kb()
+        WELCOME,
+        reply_markup=project_type_kb()
     )
+
+
+# Обработчик выбора типа проекта
+@router.callback_query(F.data.startswith("project_type:"), Draft.selecting_type)
+async def select_project_type(cb: CallbackQuery, state: FSMContext):
+    project_type_str = cb.data.split(":")[1]
+
+    try:
+        project_type = ProjectType(project_type_str)
+        await state.update_data(project_type=project_type)
+
+        type_names = {
+            ProjectType.MINI_APP: "Mini App/Платформа",
+            ProjectType.BOT: "Бот",
+            ProjectType.DESIGN: "Дизайн/Брендбук",
+            ProjectType.TILDA_SITE: "Сайт на Tilda",
+            ProjectType.SCRIPT: "Скрипт",
+            ProjectType.OTHER: "Другое"
+        }
+
+        # Для типа "Другое" не показываем кнопку "Отправить проект"
+        if project_type == ProjectType.OTHER:
+            await cb.message.edit_text(
+                f"✅ Выбран тип: {type_names[project_type]}\n\n"
+                "Теперь пришлите все материалы проекта (текст, файлы, описание).\n"
+                "После отправки материалов нажмите «Отправить проект».",
+                reply_markup=None  # Не показываем кнопку для "Другого"
+            )
+        else:
+            await cb.message.edit_text(
+                f"✅ Выбран тип: {type_names[project_type]}\n\n"
+                "Теперь пришлите все материалы проекта (текст, файлы, описание).\n"
+                "Когда все готово, нажмите «Отправить проект».",
+                reply_markup=draft_actions_kb()
+            )
+
+        await state.set_state(Draft.collecting)
+        await state.update_data(texts=[], files=[])
+
+    except ValueError:
+        await cb.answer("Неизвестный тип проекта", show_alert=True)
 
 
 # ---------- Сбор входящих сообщений ----------
@@ -236,23 +273,41 @@ async def on_any_content(m: Message, state: FSMContext):
     Всегда собираем. Если state пуст — автоматически стартуем новый черновик.
     """
     current = await state.get_state()
+
+    # Если состояние не collecting, перезапускаем процесс
     if current != Draft.collecting.state:
-        logger.debug("No collecting state for user {}, auto-start new draft", m.from_user.id)
-        await state.set_state(Draft.collecting)
-        await state.update_data(texts=[], files=[])
+        logger.debug("No collecting state for user {}, starting type selection", m.from_user.id)
+        await state.set_state(Draft.selecting_type)
+        await m.answer(
+            "Сначала выберите тип проекта:",
+            reply_markup=project_type_kb()
+        )
+        return
 
     data = await state.get_data()
     _append_to_draft(data, m)
     await state.update_data(**data)
+
+    project_type = data.get("project_type")
+
+    # Для типа "Другое" не показываем кнопку "Отправить проект"
+    if project_type == ProjectType.OTHER:
+        reply_markup = None
+        message_text = "Добавил в черновик. Продолжайте отправлять материалы."
+    else:
+        reply_markup = draft_actions_kb()
+        message_text = "Добавил в черновик. Жми «Отправить проект», когда готово."
+
     logger.debug(
         "Draft updated by {}: texts={}, files={}",
         m.from_user.id,
         len(data.get("texts", [])),
         len(data.get("files", [])),
     )
+
     await m.answer(
-        "Добавил в черновик. Жми «Отправить проект», когда готово.",
-        reply_markup=draft_actions_kb()
+        message_text,
+        reply_markup=reply_markup
     )
 
 
@@ -260,9 +315,21 @@ async def on_any_content(m: Message, state: FSMContext):
 async def clear_draft(cb: CallbackQuery, state: FSMContext):
     await state.update_data(texts=[], files=[])
     await cb.answer("Черновик очищен")
+
+    data = await state.get_data()
+    project_type = data.get("project_type")
+
+    # Для типа "Другое" не показываем кнопку "Отправить проект"
+    if project_type == ProjectType.OTHER:
+        reply_markup = None
+        message_text = "Черновик очищен. Пришли материалы заново."
+    else:
+        reply_markup = draft_actions_kb()
+        message_text = "Черновик очищен. Пришли материалы заново."
+
     await cb.message.edit_text(
-        "Черновик очищен. Пришли материалы заново.",
-        reply_markup=draft_actions_kb()
+        message_text,
+        reply_markup=reply_markup
     )
     logger.debug("Draft cleared by {}", cb.from_user.id)
 
@@ -273,9 +340,20 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = cb.from_user.id
     data = await state.get_data()
     brief = _compose_brief_text(data)
-    logger.info("Generation requested by {} brief_len={}", user_id, len(brief))
+    project_type = data.get("project_type")
 
-    # 1) Черновик — сразу в БД
+    if not project_type:
+        await cb.answer("Сначала выберите тип проекта", show_alert=True)
+        await state.set_state(Draft.selecting_type)
+        await cb.message.edit_text(
+            "Сначала выберите тип проекта:",
+            reply_markup=project_type_kb()
+        )
+        return
+
+    logger.info("Generation requested by {} type={} brief_len={}", user_id, project_type.value, len(brief))
+
+    # 1) Черновик — сразу в БД с типом проекта
     draft_title = "Черновик"
     async with async_session_maker() as session:
         task = await TaskDAO.add(
@@ -284,9 +362,11 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
             status=ProjectStatus.new.value,
             created_by=user_id,
             brief_text=brief,
+            project_type=project_type.value  # Сохраняем тип проекта в БД
         )
         task_id = task.id
-    logger.info("Draft project saved id={} by={} status='{}'", task_id, user_id, ProjectStatus.new.value)
+    logger.info("Draft project saved id={} by={} type={} status='{}'",
+                task_id, user_id, project_type.value, ProjectStatus.new.value)
 
     # 1.1) Ставим напоминание для ОБОИХ партнеров
     schedule_new_task_reminder(task_id)
@@ -312,12 +392,12 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
     async with async_session_maker() as session:
         await TaskDAO.update(session, {"id": task_id}, title=title)
 
-    # 5) Генерация КП в PDF
+    # 5) Генерация КП с учетом типа проекта
     kp_filepath = None
     try:
-        logger.info("Generating KP for task {}...", task_id)
+        logger.info("Generating KP for task {} type={}...", task_id, project_type.value)
         kp_service = KPService()
-        kp_filepath = await kp_service.create_kp_document(brief, title)
+        kp_filepath = await kp_service.create_kp_document(brief, title, project_type)
         logger.info("KP generated successfully: {}", kp_filepath)
     except Exception as e:
         logger.exception("KP generation failed for task {}: {}", task_id, e)
@@ -386,7 +466,8 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
             for recipient_id in set(kp_recipients):  # убираем дубликаты
                 try:
                     # Создаем уникальную копию файла для каждого получателя
-                    kp_copy_path = kp_filepath.replace('.pdf', f'_{recipient_id}.pdf')
+                    file_ext = os.path.splitext(kp_filepath)[1]
+                    kp_copy_path = kp_filepath.replace(file_ext, f'_{recipient_id}{file_ext}')
                     import shutil
                     shutil.copy2(kp_filepath, kp_copy_path)
 
@@ -415,18 +496,19 @@ async def send_project(cb: CallbackQuery, state: FSMContext, bot: Bot):
 
     # 8) Финальная очистка
     finally:
-        # Очищаем состояние
-        await state.set_state(Draft.collecting)
+        # Очищаем состояние и начинаем заново с выбора типа
+        await state.set_state(Draft.selecting_type)
         await state.update_data(texts=[], files=[])
 
         # Удаляем временные файлы если остались
         if kp_filepath and os.path.exists(kp_filepath):
             try:
                 os.remove(kp_filepath)
-                # Удаляем все возможные копии файлов PDF
+                # Удаляем все возможные копии файлов
                 all_recipients = [user_id, settings.BUSINESS_PARTNER_ID, settings.TEAM_PARTNER_ID]
                 for recipient_id in all_recipients:
-                    copy_path = kp_filepath.replace('.pdf', f'_{recipient_id}.pdf')
+                    file_ext = os.path.splitext(kp_filepath)[1]
+                    copy_path = kp_filepath.replace(file_ext, f'_{recipient_id}{file_ext}')
                     if os.path.exists(copy_path):
                         os.remove(copy_path)
             except Exception as e:
@@ -541,7 +623,7 @@ async def cb_kp_regen(cb: CallbackQuery, bot: Bot):
 
     await cb.answer("Перегенерирую КП…")
 
-    # Берем бриф из БД
+    # Берем бриф и тип проекта из БД
     async with async_session_maker() as session:
         task = await TaskDAO.find_one_or_none_by_id(session, task_id)
         if not task or not getattr(task, "brief_text", None):
@@ -549,10 +631,17 @@ async def cb_kp_regen(cb: CallbackQuery, bot: Bot):
             return
         brief = task.brief_text
         title = getattr(task, "title", "Проект")
+        project_type_str = getattr(task, "project_type", ProjectType.MINI_APP.value)
+
+        try:
+            project_type = ProjectType(project_type_str)
+        except ValueError:
+            project_type = ProjectType.MINI_APP  # fallback
 
     try:
-        # Генерируем новое КП
-        kp_filepath = await generate_kp_for_project(brief, title)
+        # Генерируем новое КП с учетом сохраненного типа проекта
+        kp_service = KPService()
+        kp_filepath = await kp_service.create_kp_document(brief, title, project_type)
 
         # Отправляем новое КП
         await send_kp_document(bot, cb.from_user.id, kp_filepath, task_id)

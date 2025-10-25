@@ -1,6 +1,7 @@
+# app/chat_gpt/utils/konvert_md_docx.py
 """
-Конвертер Markdown в Word
-Поддерживает таблицы, заголовки, списки, форматирование текста
+Конвертер Markdown в Word с логотипом в левом верхнем углу
+Простое текстовое оформление без таблиц
 """
 
 import os
@@ -14,20 +15,92 @@ from docx.oxml import OxmlElement
 
 
 class MarkdownToWordConverter:
-    """Класс для конвертации Markdown в Word"""
+    """Класс для конвертации Markdown в Word с логотипом в левом верхнем углу"""
 
     def __init__(self):
         self.doc = None
+        self.logo_path = "hacktaika.png"  # Путь к логотипу
 
     def create_document(self):
-        """Создает новый документ Word"""
+        """Создает новый документ Word с логотипом в левом верхнем углу"""
         self.doc = Document()
+
         # Устанавливаем стандартный стиль
         style = self.doc.styles['Normal']
         font = style.font
         font.name = 'Times New Roman'
         font.size = Pt(12)
-        font.color.rgb = RGBColor(0, 0, 0)  # Черный цвет
+        font.color.rgb = RGBColor(0, 0, 0)
+
+        # Добавляем шапку с логотипом слева
+        self.add_header_with_logo()
+
+    def add_header_with_logo(self):
+        """Добавляет шапку с логотипом в левом верхнем углу"""
+        try:
+            # Создаем параграф для логотипа (выровненный по левому краю)
+            logo_paragraph = self.doc.add_paragraph()
+            logo_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+            # Добавляем логотип если он существует
+            if os.path.exists(self.logo_path):
+                run = logo_paragraph.add_run()
+                run.add_picture(self.logo_path, width=Inches(1.1))  # Логотип как в примере
+
+            # Добавляем отступ после логотипа
+            logo_paragraph.paragraph_format.space_after = Pt(6)
+
+            # Добавляем основной заголовок (выровненный по левому краю)
+            title_paragraph = self.doc.add_paragraph()
+            title_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+            title_run = title_paragraph.add_run("КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ")
+            title_run.bold = True
+            title_run.font.size = Pt(16)
+            title_run.font.name = 'Times New Roman'
+
+            # Добавляем отступ после заголовка
+            title_paragraph.paragraph_format.space_after = Pt(12)
+
+        except Exception as e:
+            print(f"⚠️ Не удалось добавить логотип: {e}")
+            # Резервный вариант: заголовок без логотипа
+            title_paragraph = self.doc.add_paragraph()
+            title_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            title_run = title_paragraph.add_run("КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ")
+            title_run.bold = True
+            title_run.font.size = Pt(16)
+            title_run.font.name = 'Times New Roman'
+            self.doc.add_paragraph()
+
+    def add_project_info(self, project_name, creation_date):
+        """Добавляет информацию о проекте под шапкой"""
+        # Добавляем название проекта (выровнено по левому краю)
+        if project_name:
+            project_paragraph = self.doc.add_paragraph()
+            project_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            project_run = project_paragraph.add_run(project_name)
+            project_run.bold = True
+            project_run.font.size = Pt(14)
+            project_run.font.name = 'Times New Roman'
+            project_paragraph.paragraph_format.space_after = Pt(6)
+
+        # Добавляем дату создания (выровнено по левому краю)
+        if creation_date:
+            date_paragraph = self.doc.add_paragraph()
+            date_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            date_run = date_paragraph.add_run(f"Дата создания: {creation_date}")
+            date_run.italic = True
+            date_run.font.size = Pt(10)
+            date_run.font.name = 'Times New Roman'
+            date_paragraph.paragraph_format.space_after = Pt(12)
+
+        # Добавляем разделительную линию
+        line_paragraph = self.doc.add_paragraph()
+        line_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        line_run = line_paragraph.add_run("_" * 60)
+        line_run.font.size = Pt(10)
+        self.doc.add_paragraph()
 
     def add_table_borders(self, table):
         """Добавляет границы к таблице"""
@@ -51,8 +124,6 @@ class MarkdownToWordConverter:
 
     def parse_inline_formatting(self, text):
         """Парсит встроенное форматирование (жирный, курсив, код)"""
-        # Возвращает список кортежей (текст, форматирование)
-        # форматирование: {'bold': bool, 'italic': bool, 'code': bool}
         parts = []
 
         # Регулярное выражение для поиска форматирования
@@ -197,15 +268,30 @@ class MarkdownToWordConverter:
 
         return idx
 
-    def convert_file(self, input_path, output_path):
-        """Конвертирует markdown файл в Word"""
+    def add_footer(self):
+        """Добавляет футер с информацией о компании"""
+        self.doc.add_page_break()
+
+        footer_paragraph = self.doc.add_paragraph()
+        footer_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        footer_run = footer_paragraph.add_run(
+            "Данное коммерческое предложение подготовлено автоматически\nна основе требований заказчика.")
+        footer_run.italic = True
+        footer_run.font.size = Pt(10)
+        footer_run.font.name = 'Times New Roman'
+
+    def convert_file(self, input_path, output_path, project_name=None, creation_date=None):
+        """Конвертирует markdown файл в Word с логотипом в левом верхнем углу"""
         try:
             # Читаем файл
             with open(input_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # Создаем документ
+            # Создаем документ с логотипом
             self.create_document()
+
+            # Добавляем информацию о проекте
+            self.add_project_info(project_name, creation_date)
 
             # Разбиваем на строки
             lines = content.split('\n')
@@ -227,16 +313,25 @@ class MarkdownToWordConverter:
                         level += 1
 
                     title_text = stripped[level:].strip()
-                    heading_style = f'Heading {min(level, 9)}'
 
-                    paragraph = self.doc.add_paragraph(style=heading_style)
+                    # Для заголовков используем стили Word
+                    if level == 1:
+                        paragraph = self.doc.add_paragraph(style='Heading 1')
+                    elif level == 2:
+                        paragraph = self.doc.add_paragraph(style='Heading 2')
+                    else:
+                        paragraph = self.doc.add_paragraph(style=f'Heading {min(level, 9)}')
+
                     self.add_formatted_text(paragraph, title_text)
                     paragraph.paragraph_format.space_after = Pt(6)
                     i += 1
 
                 # Горизонтальная линия
                 elif stripped == '---' or stripped == '***' or stripped == '___':
-                    self.doc.add_paragraph('_' * 50)
+                    line_paragraph = self.doc.add_paragraph()
+                    line_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    line_run = line_paragraph.add_run("_" * 60)
+                    line_run.font.size = Pt(10)
                     i += 1
 
                 # Таблицы
@@ -268,9 +363,12 @@ class MarkdownToWordConverter:
                 else:
                     paragraph = self.doc.add_paragraph()
                     self.add_formatted_text(paragraph, line)
-                    # Устанавливаем выравнивание по ширине для обычного текста
-                    paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                    # Устанавливаем выравнивание по левому краю для обычного текста
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     i += 1
+
+            # Добавляем футер
+            self.add_footer()
 
             # Сохраняем документ
             self.doc.save(output_path)
@@ -280,17 +378,9 @@ class MarkdownToWordConverter:
             return False, f"Ошибка при конвертации: {str(e)}"
 
 
-def convert_markdown_to_word(input_path, output_path=None):
+def convert_markdown_to_word(input_path, output_path=None, project_name=None, creation_date=None):
     """
-    Основная функция для конвертации Markdown в Word
-
-    Args:
-        input_path (str): Путь к входному .md файлу
-        output_path (str, optional): Путь к выходному .docx файлу.
-                                   Если не указан, создается автоматически.
-
-    Returns:
-        tuple: (success: bool, message: str)
+    Основная функция для конвертации Markdown в Word с логотипом в левом верхнем углу
     """
     # Если выходной путь не указан, создаем его на основе входного
     if output_path is None:
@@ -299,68 +389,11 @@ def convert_markdown_to_word(input_path, output_path=None):
 
     # Создаем конвертер и выполняем конвертацию
     converter = MarkdownToWordConverter()
-    return converter.convert_file(input_path, output_path)
+    return converter.convert_file(input_path, output_path, project_name, creation_date)
 
 
-def convert_multiple_files(input_files, output_directory=None):
+def convert_kp_markdown_to_word(input_path, output_path, project_name, creation_date):
     """
-    Конвертирует несколько файлов
-
-    Args:
-        input_files (list): Список путей к .md файлам
-        output_directory (str, optional): Папка для сохранения.
-                                        Если не указана, файлы сохраняются рядом с исходными.
-
-    Returns:
-        dict: Результаты конвертации {filename: (success, message)}
+    Специальная функция для конвертации КП Markdown в Word с логотипом в левом верхнем углу
     """
-    results = {}
-
-    for input_file in input_files:
-        try:
-            # Определяем путь для сохранения
-            if output_directory:
-                filename = Path(input_file).stem + ".docx"
-                output_path = os.path.join(output_directory, filename)
-            else:
-                output_path = None
-
-            # Конвертируем файл
-            success, message = convert_markdown_to_word(input_file, output_path)
-            results[input_file] = (success, message)
-
-            print(f"{'✓' if success else '✗'} {Path(input_file).name}: {message}")
-
-        except Exception as e:
-            error_msg = f"Ошибка: {str(e)}"
-            results[input_file] = (False, error_msg)
-            print(f"✗ {Path(input_file).name}: {error_msg}")
-
-    return results
-
-
-# Примеры использования
-if __name__ == "__main__":
-    # Пример 1: Конвертация одного файла
-    input_file = "../generated_kp/gg.md"
-    output_file = "../generated_kp/example.docx"
-
-    success, message = convert_markdown_to_word(input_file, output_file)
-    print(f"Результат: {message}")
-
-    # Пример 2: Конвертация одного файла с автоматическим именем
-    # success, message = convert_markdown_to_word("document.md")
-    # print(f"Результат: {message}")
-    #
-    # # Пример 3: Конвертация нескольких файлов
-    # files_to_convert = [
-    #     "file1.md",
-    #     "file2.md",
-    #     "file3.md"
-    # ]
-    #
-    # results = convert_multiple_files(files_to_convert, "output_folder")
-    #
-    # # Статистика
-    # successful = sum(1 for result in results.values() if result[0])
-    # print(f"\nКонвертация завершена. Успешно: {successful}/{len(files_to_convert)}")
+    return convert_markdown_to_word(input_path, output_path, project_name, creation_date)
