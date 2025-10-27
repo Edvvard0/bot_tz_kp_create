@@ -48,16 +48,6 @@ class MarkdownToWordConverter:
         # Добавляем шапку с названием проекта
         self.add_header_with_logo(project_name)
 
-        # Добавляем дату создания (выровнено по левому краю)
-        if creation_date:
-            date_paragraph = self.doc.add_paragraph()
-            date_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            date_run = date_paragraph.add_run(f"Дата создания: {creation_date}")
-            date_run.italic = True
-            date_run.font.size = Pt(10)
-            date_run.font.name = 'Onest'
-            date_paragraph.paragraph_format.space_after = Pt(12)
-
     def add_section_title(self, title, level=2):
         """Добавляет заголовок раздела"""
         paragraph = self.doc.add_paragraph()
@@ -251,7 +241,7 @@ class MarkdownToWordConverter:
                     continue
 
                 # Пропускаем основной заголовок с названием проекта (уже добавили в шапке)
-                if stripped.startswith('# **Проект:') or (stripped.startswith('# **') and 'Проект:' in stripped):
+                if stripped.startswith('# ') and 'Проект:' in stripped:
                     i += 1
                     continue
 
