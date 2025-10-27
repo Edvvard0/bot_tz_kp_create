@@ -27,15 +27,8 @@ class KPService:
 
     def create_kp_markdown(self, kp_content: str, project_name: str) -> str:
         """Создает .md файл с коммерческим предложением"""
-        full_content = f"""# Коммерческое предложение: {project_name}
-
-**Дата создания:** {datetime.now().strftime("%d.%m.%Y")}
-
-{kp_content}
-
----
-*Данное коммерческое предложение подготовлено автоматически на основе требований заказчика.*
-"""
+        # Используем контент как есть, без дополнительных заголовков
+        full_content = kp_content
 
         filename = f"КП_{project_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
         filepath = os.path.join("generated_kp", filename)
@@ -56,7 +49,7 @@ class KPService:
             md_filepath,
             docx_filepath,
             project_name,
-            datetime.now().strftime("%d.%m.%Y")
+            None  # Дата создания не нужна
         )
 
         if success:
